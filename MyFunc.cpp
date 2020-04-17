@@ -148,6 +148,31 @@ int IsStrNum(const wchar_t *somestring)
 }
 //---------------------------------------------------------------------------
 
+bool InSet(int *m, int m_pos, int val)
+{
+  bool res;
+
+  try
+	 {
+	   int m_len = sizeof(*m) / sizeof(int);
+
+	   if (m_pos > m_len)
+		 res = false;
+	   else if (m_pos < 0)
+		 res = false;
+	   else if (m[m_pos] == val)
+         res = true;
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "GetAppVersion(): " + e.ToString());
+       res = false;
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
 void StartProcessByExeName(const String &file, const String &parent_dir)
 {
   PROCESS_INFORMATION     piProcInfo;
@@ -232,6 +257,51 @@ void StartProcessByExeName(const String &file, const String &params, const Strin
 }
 //---------------------------------------------------------------------------
 
+TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port)
+{
+  TIdTCPClient *sender;
+
+  try
+	 {
+	   sender = new TIdTCPClient(NULL);
+
+	   sender->Host = host;
+  	   sender->Port = port;
+	   sender->IPVersion = Id_IPv4;
+	   sender->ConnectTimeout = 500;
+	   sender->ReadTimeout = 5000;
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "CreateSimpleTCPSender(): " + e.ToString());
+	   sender = NULL;
+	   throw new Exception("Error creating TCPSender");
+     }
+
+  return sender;
+}
+//---------------------------------------------------------------------------
+
+void FreeSimpleTCPSender(TIdTCPClient *sender)
+{
+  try
+	 {
+	   if (sender->Connected())
+		 {
+		   sender->Disconnect();
+		   sender->Socket->Close();
+		 }
+
+	   delete sender;
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "CreateSimpleTCPSender(): " + e.ToString());
+	   throw new Exception("Error deleting TCPSender");
+	 }
+}
+//---------------------------------------------------------------------------
+
 String LoadTextFile(String filepath)
 {
   String file_text;
@@ -254,6 +324,169 @@ String LoadTextFile(String filepath)
 	file_text.Delete(1, 1);
 
   return file_text;
+}
+//---------------------------------------------------------------------------
+
+String ReadStringFromBinaryStream(TFileStream *stream,
+								  int pos, int read_size)
+{
+  String res;
+
+  try
+	 {
+	   int l = 0;
+       wchar_t smb;
+	   wchar_t *str = new wchar_t[read_size + 1];
+
+	   try
+		  {
+			if (pos >= 0)
+			  stream->Position = pos;
+
+			for (int i = 0; i < read_size; i++)
+			   {
+				 stream->Position += stream->Read(&smb, sizeof(wchar_t));
+				 l += swprintf_s(str + l, read_size + 1, L"%c", smb);
+			   }
+
+			res = str;
+		  }
+	   __finally {delete[] str;}
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	   res = "";
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+String ReadStringFromBinaryStream(TFileStream *stream, int read_size)
+{
+  String res;
+
+  try
+	 {
+	   res = ReadStringFromBinaryStream(stream, -1, read_size);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	   res = "";
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+void WriteStringIntoBinaryStream(TFileStream *stream, const String &str)
+{
+  try
+	 {
+	   int text_len = str.Length();
+	   wchar_t smb;
+	   stream->Position += stream->Write(&text_len, sizeof(int));
+
+	   for (int i = 0; i < text_len; i++)
+		  {
+			smb = str.c_str()[i];
+			stream->Position += stream->Write(&smb, sizeof(wchar_t));
+		  }
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	 }
+}
+//---------------------------------------------------------------------------
+
+bool AddAppAutoStart(const String &key_name, const String &app_path)
+{
+  bool result;
+  TRegistry *reg = new TRegistry();
+
+  try
+	 {
+       reg->RootKey = HKEY_CURRENT_USER;
+
+	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+		 {
+		   String auto_path;
+
+		   if (reg->ValueExists(key_name))
+			 {
+			   auto_path = reg->ReadString(key_name);
+
+			   if (auto_path != app_path)
+				 {
+				   reg->WriteString(key_name, app_path);
+				   result = true;
+				 }
+			   else
+				result = true;
+			 }
+		   else
+			 {
+			   reg->WriteString(key_name, app_path);
+			   result = true;
+			 }
+		 }
+	   else
+		 result = false;
+	 }
+  __finally {delete reg;}
+
+  return result;
+}
+//---------------------------------------------------------------------------
+
+bool RemoveAppAutoStart(const String &key_name)
+{
+  bool result;
+  TRegistry *reg = new TRegistry();
+
+  try
+	 {
+	   reg->RootKey = HKEY_CURRENT_USER;
+
+	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+		 {
+		   reg->DeleteValue(key_name);
+           result = true;
+		 }
+	   else
+         result = false;
+	 }
+  __finally {delete reg;}
+
+  return result;
+}
+//---------------------------------------------------------------------------
+
+bool CheckAppAutoStart(const String &key_name)
+{
+  bool result;
+  TRegistry *reg = new TRegistry();
+
+  try
+	 {
+	   reg->RootKey = HKEY_CURRENT_USER;
+
+	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+		 {
+		   if (reg->ValueExists(key_name))
+			 result = true;
+		   else
+			 result = false;
+		 }
+	   else
+         result = false;
+	 }
+  __finally {delete reg;}
+
+  return result;
 }
 //---------------------------------------------------------------------------
 
@@ -312,9 +545,8 @@ void AddToFile(String file, String text)
 
 	  try
 		 {
-           ms->Position = 0;
+		   ms->Position = 0;
 		   srv_file->Position = srv_file->Size;
-		   //ms->SaveToStream(srv_file);
 		   srv_file->CopyFrom(ms, ms->Size);
 		 }
 	  __finally {delete srv_file; delete ms;}
@@ -809,6 +1041,19 @@ void StrToList(TStringList *list, String text, String delim)
 }
 //---------------------------------------------------------------------------
 
+void StrToList(TStringList *list, String text)
+{
+  try
+	 {
+	   StrToList(list, text, NULL);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "StrToList(): " + e.ToString());
+	 }
+}
+//---------------------------------------------------------------------------
+
 void StrToList(std::vector<String> *list, String text, String delim)
 {
   TStringList *l = new TStringList();
@@ -1023,20 +1268,45 @@ bool SetConfigLine(String conf_file, int index, String value)
 
 bool SetConfigLine(String conf_file, String param, String value)
 {
-  return SetConfigLine(conf_file,
-                       GetConfigLineInd(conf_file, param),
-                       value); 
+  int ind = GetConfigLineInd(conf_file, param);
+
+  if (ind < 0)
+	return AddConfigLine(conf_file, param, value);
+  else
+	return SetConfigLine(conf_file, ind, value);
 }
 //---------------------------------------------------------------------------
 
 bool AddConfigLine(String conf_file, String param, String value)
 {
-  bool result;
+  bool result, add_endln = false;
 
   try
 	 {
+	   TStringStream *ms = new TStringStream("", TEncoding::UTF8, true);
+
+	   try
+		 {
+		   ms->Position = 0;
+		   ms->LoadFromFile(conf_file);
+
+		   if (ms->Size > 0)
+			 {
+			   ms->Position = ms->Size - sizeof(wchar_t);
+
+			   String s = ms->ReadString(sizeof(wchar_t));
+
+			   if (s != "\r\n")
+				 add_endln = true;
+             }
+		 }
+	   __finally {delete ms;}
+
+	   if (add_endln)
+         AddToFile(conf_file, "\r\n");
+
 	   AddToFile(conf_file, param + "=" + value);
-       AddToFile(conf_file, "\r\n");
+	   AddToFile(conf_file, "\r\n");
 	   result = true;
 	 }
   catch (Exception &e)
@@ -1304,25 +1574,39 @@ TDateTime GetFileDateTime(String file)
 
 void ShowLog(String message, TListBox *output)
 {
-  output->Items->Add("["
-                  + DateToStr(Date())
-                  +" "
-                  +TimeToStr(Time())
-                  + "]"
-                  +" : "
-                  +message);
+  try
+	 {
+	   output->Items->Add("["
+						  + DateToStr(Date())
+						  + " "
+						  + TimeToStr(Time())
+						  + "]"
+						  + " : "
+						  + message);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "ShowLog(): " + e.ToString());
+	 }
 }
 //---------------------------------------------------------------------------
 
 void ShowLog(String message, TMemo *output)
 {
-  output->Lines->Add("["
-					 + DateToStr(Date())
-					 + " "
-					 + TimeToStr(Time())
-					 + "]"
-					 + " : "
-				  	 + message);
+  try
+	 {
+	   output->Lines->Add("["
+						  + DateToStr(Date())
+						  + " "
+						  + TimeToStr(Time())
+						  + "]"
+						  + " : "
+					 	  + message);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "ShowLog(): " + e.ToString());
+	 }
 }
 //---------------------------------------------------------------------------
 
@@ -1352,9 +1636,14 @@ void SaveLog(String text, TStringList *log)
 				+ "]"
 				+ " : "
 				+ text;
-
-  if (log)
-  	log->Add(msg);
+  try
+	 {
+	   log->Add(msg);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLog("exceptions.log", "SaveLog(): " + e.ToString());
+	 }
 }
 //---------------------------------------------------------------------------
 
@@ -1473,21 +1762,21 @@ void LoadJPEGToImage(TImage *target, String file)
 
 String ParseString(const String &main_str,
 						String target_str,
-                        const String insert_str)
+						const String insert_str)
 {
   String result = main_str;
   int pos = 0, count = 0;
 
   while (result.Pos(target_str) != 0)
     {
-      pos = result.Pos(target_str);
+	  pos = result.Pos(target_str);
       count = target_str.Length();
-      result = result.Delete(pos, count);
-      result = result.Insert(insert_str, pos);
+	  result = result.Delete(pos, count);
+	  result = result.Insert(insert_str, pos);
 	}
 
   return result;
-}                       
+}
 //---------------------------------------------------------------------------
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
@@ -1655,7 +1944,7 @@ void ErrorExit(LPTSTR lpszFunction)
     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
 
     LocalFree(lpMsgBuf);
-    LocalFree(lpDisplayBuf);
+	LocalFree(lpDisplayBuf);
     ExitProcess(dw);
 }
 //---------------------------------------------------------------------------

@@ -23,7 +23,10 @@ This program is free software: you can redistribute it and/or modify
 #include <System.RegularExpressions.hpp>
 #include <Vcl.Controls.hpp>
 #include <Vcl.StdCtrls.hpp>
+#include <Vcl.ComCtrls.hpp>
 #include <Vcl.Forms.hpp>
+#include <Registry.hpp>
+#include <IdFTP.hpp>
 #include <Tlhelp32.h>
 #include <vector>
 #include <fstream>
@@ -104,12 +107,24 @@ void StartProcessByExeName(const String &file, const String &parent_dir);
 void StartProcessByExeName(const String &file, const String &params, const String &parent_dir);
 void StartProcessByExeName(const String &file);
 
+bool AddAppAutoStart(const String &key_name, const String &app_path);
+bool RemoveAppAutoStart(const String &key_name);
+bool CheckAppAutoStart(const String &key_name);
+
+TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port);
+void FreeSimpleTCPSender(TIdTCPClient *sender);
+
 //собирает информацию о файле, записывает в структуру
 //и возвращает ее
   FILEINFO GetFileInfo(String path);
 
 //выгружает в String содержимое текстового файла
   String LoadTextFile(String filepath);
+//читает из потока строку, начиная с позиции pos
+  String ReadStringFromBinaryStream(TFileStream *stream,
+								   int pos, int read_size);
+//читает из потока строку из текущей позиции
+  String ReadStringFromBinaryStream(TFileStream *stream, int read_size);
 
 //открывает файл (любой), выделяет память под него
 //и задает указатель (void *buf) на область памяти
@@ -120,6 +135,8 @@ void StartProcessByExeName(const String &file);
   void AddToFile(String file, String text);
 
   int SaveVectorToFile(std::vector <String> *vecStr, String path);
+
+  void WriteStringIntoBinaryStream(TFileStream *stream, const String &str);
 
   int GetFileSize(String file);
 
@@ -179,6 +196,7 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //ф-я принимает в качестве параметра указатель на список, в который
 //сохраняет части строки отдленные символом-разделителем
   void StrToList(TStringList *list, String text, String delim);
+  void StrToList(TStringList *list, String text);
 
 //обертка предыдущей функции для работы с вектором String
   void StrToList(std::vector<String> *list, String text, String delim);
@@ -264,7 +282,7 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   bool IsCorrect (int val,
                    String type,
                    int criteria1,
-                   int criteria2);
+				   int criteria2);
 
 //ф-я парсит строку main_str и вставляет вместо символа symbol строку insert_str
   String ParseString(const String &main_str, String target_str, const String insert_str);
@@ -286,6 +304,8 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //то же, но для цифр
   int IsNum(wchar_t symb);
 
+//проверяет, входит ли число val во множество m в позиции m_pos
+  bool InSet(int *m, int m_pos, int val);
 //---------------------------------------------------------------------------
 
 //поиск хендла окна по имени
