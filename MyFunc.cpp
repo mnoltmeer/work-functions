@@ -381,7 +381,7 @@ String ReadStringFromBinaryStream(TFileStream *stream, int read_size)
 }
 //---------------------------------------------------------------------------
 
-void WriteStringIntoBinaryStream(TFileStream *stream, const String &str)
+void WriteStringIntoBinaryStream(TFileStream *stream, String str)
 {
   try
 	 {

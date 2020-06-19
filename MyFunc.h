@@ -73,7 +73,9 @@ enum ReadFileExitCodes {RF_OK = 0,          //успешно
 						RF_NO_OPEN = -1,    //ошибка открыти€ файла
 						RF_READ_ERR = -2,   //ошибка чтени€
 						RF_ACCESS_ERR = -3};//ошибка обращени€ к файлу
-//----------------------------------------------------------
+//---------------------------------------------------------------------------
+
+
 
 //---------------------------------------------------------------------------
 // ‘ункции общего пользовани€
@@ -136,7 +138,7 @@ void FreeSimpleTCPSender(TIdTCPClient *sender);
 
   int SaveVectorToFile(std::vector <String> *vecStr, String path);
 
-  void WriteStringIntoBinaryStream(TFileStream *stream, const String &str);
+  void WriteStringIntoBinaryStream(TFileStream *stream, String str);
 
   int GetFileSize(String file);
 
@@ -205,9 +207,6 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //раздел€€ элементы списка символом-разделителем
   String ListToStr(TStringList *list, String delim);
 
-//заносит лог событи€ в файл
-  void SaveLog(String file, String rec);
-
 //возвращает значение параметра из указаной строки конфиг-файла
 //ф-€ считает значением то, что идет после символа "="
 //поэтому файл должен иметь вид:
@@ -259,8 +258,10 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 
 //выводит лог событи€ в мемо
   void ShowLog(String message, TMemo *output);
-  void SaveLog(String file, String rec);
   void SaveLog(String text, TStringList *log);
+
+//заносит лог событи€ в файл
+  void SaveLog(String file, String rec);
 
 //высчитывает контрольную сумму файла (MD5) и возвращает ее
   //String GetCRC(const String file);
@@ -280,9 +281,9 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //       morethan - больше чем
 //       lessthan - меньше чем
   bool IsCorrect (int val,
-                   String type,
-                   int criteria1,
-				   int criteria2);
+				  String type,
+				  int criteria1,
+				  int criteria2);
 
 //ф-€ парсит строку main_str и вставл€ет вместо символа symbol строку insert_str
   String ParseString(const String &main_str, String target_str, const String insert_str);
