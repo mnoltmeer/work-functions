@@ -16,6 +16,7 @@ This program is free software: you can redistribute it and/or modify
 */
 
 //---------------------------------------------------------------------------
+#define UNICODE
 
 #include <vcl.h>
 #include <shellapi.h>
@@ -1948,3 +1949,4 @@ void ErrorExit(LPTSTR lpszFunction)
     ExitProcess(dw);
 }
 //---------------------------------------------------------------------------
+
