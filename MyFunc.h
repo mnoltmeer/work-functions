@@ -25,6 +25,7 @@ This program is free software: you can redistribute it and/or modify
 #include <Vcl.StdCtrls.hpp>
 #include <Vcl.ComCtrls.hpp>
 #include <Vcl.Forms.hpp>
+#include <jpeg.hpp>
 #include <Registry.hpp>
 #include <IdFTP.hpp>
 #include <Tlhelp32.h>
