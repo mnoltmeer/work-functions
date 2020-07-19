@@ -189,6 +189,9 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   int GetFileCountRegEx(String search_dir, String reg_exp);
   int GetFileCountSubDirsRegEx(String search_dir, String reg_exp);
 
+  //возвращает путь к директории в которой содержится файл
+  String GetDirPathFromFilePath(const String &file);
+
   int CopyAll(String fr_path, String to_path, TStringList *log);
 
   int CopyDirs(String source, String destin);

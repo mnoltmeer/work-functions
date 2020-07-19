@@ -878,6 +878,14 @@ String GetVersionInString(const wchar_t *FileName)
 }
 //---------------------------------------------------------------------------
 
+String GetDirPathFromFilePath(const String &file)
+{
+  int pos = file.LastDelimiter("\\");
+
+  return file.SubString(1, pos);
+}
+//---------------------------------------------------------------------------
+
 int CompareVersions(const wchar_t *FileName1, const wchar_t *FileName2)
 {
   int FileVersion1[4] = {0,0,0,0};
