@@ -58,6 +58,10 @@ This program is free software: you can redistribute it and/or modify
 #define VER_1_HIGHER 1
 #define VER_2_HIGHER 2
 
+//для функции AddAppAutoStart
+#define FOR_CURRENT_USER false
+#define FOR_ALL_USERS true
+
 enum TranslateType {TT_TO_STR = 0, TT_TO_INT = 1, TT_TO_BOOL = 2};
 
 enum ReadParamExitCodes {RP_OK = 0,          //успешно
@@ -110,9 +114,9 @@ void StartProcessByExeName(const String &file, const String &parent_dir);
 void StartProcessByExeName(const String &file, const String &params, const String &parent_dir);
 void StartProcessByExeName(const String &file);
 
-bool AddAppAutoStart(const String &key_name, const String &app_path);
-bool RemoveAppAutoStart(const String &key_name);
-bool CheckAppAutoStart(const String &key_name);
+bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all);
+bool RemoveAppAutoStart(const String &key_name, bool for_all);
+bool CheckAppAutoStart(const String &key_name, bool for_all);
 
 TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port);
 void FreeSimpleTCPSender(TIdTCPClient *sender);
