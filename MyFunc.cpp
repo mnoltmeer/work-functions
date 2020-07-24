@@ -403,14 +403,17 @@ void WriteStringIntoBinaryStream(TFileStream *stream, String str)
 }
 //---------------------------------------------------------------------------
 
-bool AddAppAutoStart(const String &key_name, const String &app_path)
+bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all)
 {
   bool result;
   TRegistry *reg = new TRegistry();
 
   try
 	 {
-       reg->RootKey = HKEY_CURRENT_USER;
+	   if (for_all)
+		 reg->RootKey = HKEY_LOCAL_MACHINE;
+	   else
+		 reg->RootKey = HKEY_CURRENT_USER;
 
 	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
 		 {
@@ -443,19 +446,27 @@ bool AddAppAutoStart(const String &key_name, const String &app_path)
 }
 //---------------------------------------------------------------------------
 
-bool RemoveAppAutoStart(const String &key_name)
+bool RemoveAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
   TRegistry *reg = new TRegistry();
 
   try
 	 {
-	   reg->RootKey = HKEY_CURRENT_USER;
+	   if (for_all)
+		 reg->RootKey = HKEY_LOCAL_MACHINE;
+	   else
+		 reg->RootKey = HKEY_CURRENT_USER;
 
 	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
 		 {
-		   reg->DeleteValue(key_name);
-           result = true;
+           if (reg->ValueExists(key_name))
+			 {
+			   reg->DeleteValue(key_name);
+			   result = true;
+			 }
+		   else
+			 result = false;
 		 }
 	   else
          result = false;
@@ -466,14 +477,17 @@ bool RemoveAppAutoStart(const String &key_name)
 }
 //---------------------------------------------------------------------------
 
-bool CheckAppAutoStart(const String &key_name)
+bool CheckAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
   TRegistry *reg = new TRegistry();
 
   try
 	 {
-	   reg->RootKey = HKEY_CURRENT_USER;
+	   if (for_all)
+		 reg->RootKey = HKEY_LOCAL_MACHINE;
+	   else
+		 reg->RootKey = HKEY_CURRENT_USER;
 
 	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
 		 {
