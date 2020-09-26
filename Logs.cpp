@@ -48,7 +48,7 @@ void SaveLog(String file, String rec)
 		TimeToStr(Time()) +
 		"]" +
 		" : " +
-		text +
+		rec +
 		"\r\n";
 
 //сохраняем в файл
