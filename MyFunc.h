@@ -120,6 +120,9 @@ bool CheckAppAutoStart(const String &key_name, bool for_all);
 
 TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port);
 void FreeSimpleTCPSender(TIdTCPClient *sender);
+int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer);
+int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer);
+int SendToHost(const wchar_t *host, int port, const String &data);
 
 //собирает информацию о файле, записывает в структуру
 //и возвращает ее
@@ -173,6 +176,16 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //2 - вторая больше
 //-1 - произошла ошибка при получении версии
   int CompareVersions(const wchar_t *FileName1, const wchar_t *FileName2);
+
+//сравнивает значения версий, полученных с помощью GetAppVersion()
+//0 - версии равны
+//1 - первая больше
+//2 - вторая больше
+//-1 - произошла ошибка при получении версии
+  int CompareVersions(int *VerInfo1, int *VerInfo2);
+
+//возвращает имя компа
+  String GetPCName();
 
   TDateTime GetFileDateTime(String file);
 
@@ -270,6 +283,9 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 
 //заносит лог события в файл
   void SaveLog(String file, String rec);
+
+//заносит лог события в файл который расположен в каталоге Документы из %USERPROFILE%
+  void SaveLogToUserFolder(const String &file, const String &subdir, const String &msg);
 
 //высчитывает контрольную сумму файла (MD5) и возвращает ее
   //String GetCRC(const String file);

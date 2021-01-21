@@ -166,8 +166,8 @@ bool InSet(int *m, int m_pos, int val)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "GetAppVersion(): " + e.ToString());
-       res = false;
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetAppVersion(): " + e.ToString());
+	   res = false;
 	 }
 
   return res;
@@ -274,7 +274,7 @@ TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "CreateSimpleTCPSender(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "CreateSimpleTCPSender(): " + e.ToString());
 	   sender = NULL;
 	   throw new Exception("Error creating TCPSender");
      }
@@ -297,9 +297,133 @@ void FreeSimpleTCPSender(TIdTCPClient *sender)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "CreateSimpleTCPSender(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "CreateSimpleTCPSender(): " + e.ToString());
 	   throw new Exception("Error deleting TCPSender");
 	 }
+}
+//---------------------------------------------------------------------------
+
+int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
+{
+  TIdTCPClient *sender;
+  int res = 0;
+
+  try
+	 {
+	   sender = CreateSimpleTCPSender(host, port);
+
+	   try
+		  {
+			sender->Connect();
+			rw_bufer->Position = 0;
+			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
+		  }
+	   catch (Exception &e)
+		  {
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs",
+								String(host) + ":" +
+								IntToStr(port) + " " +
+								"помилка відправки даних: " +
+								e.ToString());
+			res = -1;
+		  }
+
+       try
+		  {
+			rw_bufer->Clear();
+			sender->IOHandler->ReadStream(rw_bufer);
+		  }
+	   catch (Exception &e)
+		  {
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs",
+								String(host) + ":" +
+								IntToStr(port) + " " +
+								"помилка отримання даних: " +
+								e.ToString());
+			res = -1;
+		  }
+
+	   rw_bufer->Position = 0;
+	 }
+  __finally
+	 {
+	   if (sender)
+		 FreeSimpleTCPSender(sender);
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
+{
+  TIdTCPClient *sender;
+  int res = 0;
+
+  try
+	 {
+	   try
+		  {
+			sender = CreateSimpleTCPSender(host, port);
+			sender->Connect();
+			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
+		  }
+	   catch (Exception &e)
+		  {
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs",
+								String(host) + ":" +
+								IntToStr(port) + " " +
+								"помилка відправки даних: " +
+								e.ToString());
+			res = -1;
+		  }
+
+	   rw_bufer->Clear();
+	 }
+  __finally
+	 {
+	   if (sender)
+		 FreeSimpleTCPSender(sender);
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+int SendToHost(const wchar_t *host, int port, const String &data)
+{
+  TIdTCPClient *sender;
+  int res = 0;
+  TStringStream *ms = new TStringStream("", TEncoding::UTF8, true);
+
+  try
+	 {
+	   try
+		  {
+			sender = CreateSimpleTCPSender(host, port);
+			sender->Connect();
+            ms->Position = 0;
+			sender->IOHandler->Write(ms, ms->Size, true);
+		  }
+	   catch (Exception &e)
+		  {
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs",
+								String(host) + ":" +
+								IntToStr(port) + " " +
+								"помилка відправки даних: " +
+								e.ToString());
+			res = -1;
+		  }
+	 }
+  __finally
+	 {
+	   delete ms;
+
+	   if (sender)
+		 FreeSimpleTCPSender(sender);
+	 }
+
+  return res;
 }
 //---------------------------------------------------------------------------
 
@@ -356,7 +480,7 @@ String ReadStringFromBinaryStream(TFileStream *stream,
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetStringFromBinaryStream(): " + e.ToString());
 	   res = "";
 	 }
 
@@ -374,7 +498,7 @@ String ReadStringFromBinaryStream(TFileStream *stream, int read_size)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetStringFromBinaryStream(): " + e.ToString());
 	   res = "";
 	 }
 
@@ -398,7 +522,7 @@ void WriteStringIntoBinaryStream(TFileStream *stream, String str)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "GetStringFromBinaryStream(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetStringFromBinaryStream(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -666,7 +790,7 @@ int GetFileCountSubDirs(String search_dir, String mask)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "GetFileCountSubDirs(): " + e.ToString());
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetFileCountSubDirs(): " + e.ToString());
 			FileCount = 0;
 		  }
 	 }
@@ -697,7 +821,7 @@ int GetFileCountSubDirsRegEx(String search_dir, String reg_exp)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "GetFileCountSubDirsRegEx(): " + e.ToString());
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetFileCountSubDirsRegEx(): " + e.ToString());
 			FileCount = 0;
 		  }
 	 }
@@ -851,7 +975,7 @@ bool GetAppVersion(const wchar_t *FileName, int *VerInfo)
 	 }
   catch(Exception &e)
 	 {
-	   SaveLog("exceptions.log", "GetAppVersion(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "GetAppVersion(): " + e.ToString());
 
 	   return false;
 	 }
@@ -892,14 +1016,6 @@ String GetVersionInString(const wchar_t *FileName)
 }
 //---------------------------------------------------------------------------
 
-String GetDirPathFromFilePath(const String &file)
-{
-  int pos = file.LastDelimiter("\\");
-
-  return file.SubString(1, pos);
-}
-//---------------------------------------------------------------------------
-
 int CompareVersions(const wchar_t *FileName1, const wchar_t *FileName2)
 {
   int FileVersion1[4] = {0,0,0,0};
@@ -909,6 +1025,16 @@ int CompareVersions(const wchar_t *FileName1, const wchar_t *FileName2)
   if (!GetAppVersion(FileName1, FileVersion1) || !GetAppVersion(FileName2, FileVersion2))
 	return -1;
 
+  res = CompareVersions(FileVersion1, FileVersion2);
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+int CompareVersions(int *VerInfo1, int *VerInfo2)
+{
+  int res = 0;
+
   for (int i = 0; i < 4; i++)
 	 {
 	   if (FileVersion1[i] > FileVersion2[i])
@@ -916,6 +1042,29 @@ int CompareVersions(const wchar_t *FileName1, const wchar_t *FileName2)
 	   else if (FileVersion1[i] < FileVersion2[i])
 		 {res = 2; break;}
 	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+String GetDirPathFromFilePath(const String &file)
+{
+  int pos = file.LastDelimiter("\\");
+
+  return file.SubString(1, pos);
+}
+//---------------------------------------------------------------------------
+
+String GetPCName()
+{
+  unsigned long sz = MAX_COMPUTERNAME_LENGTH + 1;
+  wchar_t *buff = new wchar_t[sz];
+
+  GetComputerName(buff, &sz);
+
+  String res = buff;
+
+  delete buff;
 
   return res;
 }
@@ -1059,7 +1208,7 @@ void StrToList(TStringList *list, String text, String delim)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "StrToList(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "StrToList(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -1072,7 +1221,7 @@ void StrToList(TStringList *list, String text)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "StrToList(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "StrToList(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -1334,7 +1483,7 @@ bool AddConfigLine(String conf_file, String param, String value)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "AddConfigLine(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "AddConfigLine(): " + e.ToString());
 	   result = false;
 	 }
 
@@ -1369,7 +1518,7 @@ bool RemConfigLine(String conf_file, String param)
 				 }
 			  catch (Exception &e)
 				 {
-				   SaveLog("exceptions.log", "RemConfigLine(): " + e.ToString());
+				   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "RemConfigLine(): " + e.ToString());
 				   result = false;
 				 }
 			}
@@ -1609,7 +1758,7 @@ void ShowLog(String message, TListBox *output)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "ShowLog(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "ShowLog(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -1628,7 +1777,7 @@ void ShowLog(String message, TMemo *output)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "ShowLog(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "ShowLog(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -1637,14 +1786,14 @@ void SaveLog(String file, String rec)
 {
 //добавим к тексту дату и время добавления
   rec = "["
-        + DateToStr(Date())
-        + " "
-        + TimeToStr(Time())
-        + "]"
+		+ DateToStr(Date())
+		+ " "
+		+ TimeToStr(Time())
+		+ "]"
         + " : "
 		+ rec
 		+ "\r\n";
-        
+
 //сохраняем в файл
   AddToFile(file, rec);
 }
@@ -1665,8 +1814,31 @@ void SaveLog(String text, TStringList *log)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "SaveLog(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "ErrorLogs", "SaveLog(): " + e.ToString());
 	 }
+}
+//---------------------------------------------------------------------------
+
+void SaveLogToUserFolder(const String &file, const String &subdir, const String &msg)
+{
+//добавим к тексту дату и время добавления
+  String rec = "[" + DateToStr(Date())
+				+ " "
+				+ TimeToStr(Time())
+				+ "]"
+				+ " : "
+				+ msg
+				+ "\r\n";
+
+  String path = GetEnvironmentVariable("USERPROFILE") + "\\Documents\\";
+
+  if (subdir != "")
+	path += subdir + "\\";
+  else
+	path += file;
+
+//сохраняем в файл
+  AddToFile(file, rec);
 }
 //---------------------------------------------------------------------------
 
@@ -1712,7 +1884,7 @@ bool ExtractHostPort(String conn_str, String &host, int &port)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "ExtractHostPort(): " + e.ToString());
+			SaveLogToUserFolder("exceptions.log", "ErrorLogs", "ExtractHostPort(): " + e.ToString());
 			result = false;
 		  }
 	 }
