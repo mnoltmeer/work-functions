@@ -221,6 +221,12 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //удаляет из указанного каталога все файлы и подкаталоги
   void DeleteAllFromDir(String destin);
 
+//удаляет из указанного каталога все файлы согласно списка
+  void DeleteFilesAccordingToList(String dir, TStringList *names_list);
+
+//удаляет из указанного каталога все файлы кроме тех, что в списке
+  void DeleteFilesExceptList(String dir, TStringList *names_list);
+
 //ф-я принимает в качестве параметра указатель на список, в который
 //сохраняет части строки отдленные символом-разделителем
   void StrToList(TStringList *list, String text, String delim);
