@@ -1037,9 +1037,9 @@ int CompareVersions(int *VerInfo1, int *VerInfo2)
 
   for (int i = 0; i < 4; i++)
 	 {
-	   if (FileVersion1[i] > FileVersion2[i])
+	   if (VerInfo1[i] > VerInfo2[i])
 		 {res = 1; break;}
-	   else if (FileVersion1[i] < FileVersion2[i])
+	   else if (VerInfo1[i] < VerInfo2[i])
 		 {res = 2; break;}
 	 }
 
@@ -1052,6 +1052,14 @@ String GetDirPathFromFilePath(const String &file)
   int pos = file.LastDelimiter("\\");
 
   return file.SubString(1, pos);
+}
+//---------------------------------------------------------------------------
+
+String GetFileNameFromFilePath(const String &file)
+{
+  String name = file;
+
+  return name.Delete(1, name.LastDelimiter("\\"));
 }
 //---------------------------------------------------------------------------
 
@@ -2109,6 +2117,34 @@ bool FindAllProcesessByExeName(const wchar_t *name, TStringList *pid_list)
   return true;
 }
 //---------------------------------------------------------------------------
+
+void ShutdownProcessByExeName(const String &name)
+{
+  PROCESSENTRY32 pe32;
+  pe32.dwSize = sizeof(PROCESSENTRY32);
+
+  HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+
+  if (hProcessSnap == INVALID_HANDLE_VALUE)
+	return;
+
+  if (Process32First(hProcessSnap, &pe32))
+	{
+	  do
+		{
+		  if (StrCmpW(pe32.szExeFile, name.c_str()) == 0)
+			{
+			  TerminateProcess(hProcessSnap, 0);
+			  break;
+			}
+		}
+	  while (Process32Next(hProcessSnap, &pe32));
+	}
+
+  if (hProcessSnap)
+	CloseHandle(hProcessSnap);
+}
+//-------------------------------------------------------------------------
 
 void ErrorExit(LPTSTR lpszFunction)
 {

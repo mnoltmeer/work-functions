@@ -114,6 +114,8 @@ void StartProcessByExeName(const String &file, const String &parent_dir);
 void StartProcessByExeName(const String &file, const String &params, const String &parent_dir);
 void StartProcessByExeName(const String &file);
 
+void ShutdownProcessByExeName(const String &name);
+
 bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all);
 bool RemoveAppAutoStart(const String &key_name, bool for_all);
 bool CheckAppAutoStart(const String &key_name, bool for_all);
@@ -208,6 +210,9 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 
   //возвращает путь к директории в которой содержится файл
   String GetDirPathFromFilePath(const String &file);
+
+  //выделяет имя файла из полного пути
+  String GetFileNameFromFilePath(const String &file);
 
   int CopyAll(String fr_path, String to_path, TStringList *log);
 
