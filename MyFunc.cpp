@@ -270,7 +270,7 @@ TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port)
 	   sender->Host = host;
   	   sender->Port = port;
 	   sender->IPVersion = Id_IPv4;
-	   sender->ConnectTimeout = 500;
+	   sender->ConnectTimeout = 1500;
 	   sender->ReadTimeout = 5000;
 	 }
   catch (Exception &e)
@@ -307,7 +307,7 @@ void FreeSimpleTCPSender(TIdTCPClient *sender)
 int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 {
   TIdTCPClient *sender;
-  int res = 0;
+  int res = 1;
 
   try
 	 {
@@ -316,7 +316,6 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 	   try
 		  {
 			sender->Connect();
-			rw_bufer->Position = 0;
 			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
 		  }
 	   catch (Exception &e)
@@ -326,12 +325,13 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 								IntToStr(port) + " " +
 								"помилка відправки даних: " +
 								e.ToString());
-			res = -1;
+			res = 0;
 		  }
 
        try
 		  {
 			rw_bufer->Clear();
+            rw_bufer->Position = 0;
 			sender->IOHandler->ReadStream(rw_bufer);
 		  }
 	   catch (Exception &e)
@@ -341,7 +341,7 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 								IntToStr(port) + " " +
 								"помилка отримання даних: " +
 								e.ToString());
-			res = -1;
+			res = 0;
 		  }
 
 	   rw_bufer->Position = 0;
@@ -359,7 +359,7 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 {
   TIdTCPClient *sender;
-  int res = 0;
+  int res = 1;
 
   try
 	 {
@@ -376,7 +376,7 @@ int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 								IntToStr(port) + " " +
 								"помилка відправки даних: " +
 								e.ToString());
-			res = -1;
+			res = 0;
 		  }
 
 	   rw_bufer->Clear();
@@ -1204,20 +1204,20 @@ void DeleteFilesExceptList(String dir, TStringList *names_list)
 
   try
 	 {
-	   GetFileList(local_files, DataPath, WITHOUT_DIRS, WITHOUT_FULL_PATH);
+	   GetFileList(local_files, dir, "*", WITHOUT_DIRS, WITHOUT_FULL_PATH);
 
 	   for (int i = 0; i < local_files->Count; i++)
 		  {
 			in_list = false;
 
-			for (int j = 0; j < names_list->size(); j++)
+			for (int j = 0; j < names_list->Count; j++)
 			   {
 				 if (local_files->Strings[i] == names_list->Strings[j])
 				   in_list = true;
 			   }
 
 			if (!in_list)
-              DeleteFile(dir + "\\" + names_list->Strings[i]);
+              DeleteFile(dir + "\\" + local_files->Strings[i]);
 		  }
 	 }
   __finally {delete local_files;}
