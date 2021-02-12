@@ -934,14 +934,14 @@ void GetDirList(TStringList *list, String path, bool fullpath)
 
 //возвращает размер указанного файла в байтах
 //в случае, если файл не найден возвращает -1
-int GetFileSize(String filepath)
+unsigned long GetFileSize(String filepath)
 {
-  int file_size;
+  unsigned long file_size;
 
   if (!FileExists(filepath))
 	return -1;
 
-  TFileStream *fs = new TFileStream(filepath, fmOpenRead);
+  TFileStream *fs = new TFileStream(filepath, fmOpenRead|fmShareDenyNone);
 
   try
 	 {

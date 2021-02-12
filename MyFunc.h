@@ -150,7 +150,7 @@ int SendToHost(const wchar_t *host, int port, const String &data);
 
   void WriteStringIntoBinaryStream(TFileStream *stream, String str);
 
-  int GetFileSize(String file);
+  unsigned long GetFileSize(String file);
 
 // получение версии файла
 /*
