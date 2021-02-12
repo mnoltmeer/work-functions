@@ -1078,7 +1078,7 @@ String GetPCName()
 
   String res = buff;
 
-  delete buff;
+  delete[] buff;
 
   return res;
 }
