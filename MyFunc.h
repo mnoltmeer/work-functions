@@ -214,6 +214,14 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   //выделяет имя файла из полного пути
   String GetFileNameFromFilePath(const String &file);
 
+  //возвращает дату в текстовом виде в указанном формате
+  String GetFormattedDate(TDateTime date,
+						  wchar_t dt_sep, wchar_t tm_sep,
+						  const String &short_dt_format, const String &long_tm_format);
+  //возвращает дату из строки в указанном формате
+  TDateTime GetFormattedDate(const String &date_str, wchar_t dt_sep, wchar_t tm_sep,
+													 const String &short_dt_format, const String &long_tm_format);
+
   int CopyAll(String fr_path, String to_path, TStringList *log);
 
   int CopyDirs(String source, String destin);

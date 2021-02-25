@@ -30,6 +30,7 @@ This program is free software: you can redistribute it and/or modify
 #pragma package(smart_init)
 
 String UsedAppLogDir;
+TFormatSettings UsedDateFormat;
 //---------------------------------------------------------------------------
 // Функции общего пользования
 //---------------------------------------------------------------------------
@@ -1079,6 +1080,60 @@ String GetPCName()
   String res = buff;
 
   delete[] buff;
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+String GetFormattedDate(TDateTime date, wchar_t dt_sep, wchar_t tm_sep,
+										const String &short_dt_format, const String &long_tm_format)
+{
+  String res;
+
+  try
+	 {
+	   TFormatSettings settings;
+
+       settings.DateSeparator = '.';
+	   settings.ShortDateFormat = "dd.mm.yyy";
+	   settings.TimeSeparator = ':';
+	   settings.LongTimeFormat = "hh:nn:ss";
+
+       res = DateTimeToStr(date, settings);
+	 }
+  catch(Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetFormattedDate(): " + e.ToString());
+
+	   res = "";
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+TDateTime GetFormattedDate(const String &date_str, wchar_t dt_sep, wchar_t tm_sep,
+												   const String &short_dt_format, const String &long_tm_format)
+{
+  TDateTime res;
+
+  try
+	 {
+	   TFormatSettings settings;
+
+       settings.DateSeparator = '.';
+	   settings.ShortDateFormat = "dd.mm.yyy";
+	   settings.TimeSeparator = ':';
+	   settings.LongTimeFormat = "hh:nn:ss";
+
+	   res = StrToDateTime(date_str, settings);
+	 }
+  catch(Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetFormattedDate(): " + e.ToString());
+
+	   res = NULL;
+	 }
 
   return res;
 }
