@@ -30,7 +30,6 @@ This program is free software: you can redistribute it and/or modify
 #pragma package(smart_init)
 
 String UsedAppLogDir;
-TFormatSettings UsedDateFormat;
 //---------------------------------------------------------------------------
 // Функции общего пользования
 //---------------------------------------------------------------------------
@@ -1070,6 +1069,14 @@ String GetFileNameFromFilePath(const String &file)
 }
 //---------------------------------------------------------------------------
 
+String GetFileExtensionFromFileName(const String &file)
+{
+  String ext = file;
+
+  return ext.Delete(1, ext.LastDelimiter("."));
+}
+//---------------------------------------------------------------------------
+
 String GetPCName()
 {
   unsigned long sz = MAX_COMPUTERNAME_LENGTH + 1;
@@ -1267,7 +1274,7 @@ void DeleteFilesExceptList(String dir, TStringList *names_list)
 
 			for (int j = 0; j < names_list->Count; j++)
 			   {
-				 if (local_files->Strings[i] == names_list->Strings[j])
+				 if (UpperCase(local_files->Strings[i]) == UpperCase(names_list->Strings[j]))
 				   in_list = true;
 			   }
 

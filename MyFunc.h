@@ -214,6 +214,9 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   //выделяет имя файла из полного пути
   String GetFileNameFromFilePath(const String &file);
 
+  //выделяет из имени файла его расширение
+  String GetFileExtensionFromFileName(const String &file);
+
   //возвращает дату в текстовом виде в указанном формате
   String GetFormattedDate(TDateTime date,
 						  wchar_t dt_sep, wchar_t tm_sep,
