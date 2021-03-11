@@ -2112,7 +2112,7 @@ HWND FindHandleByName(const wchar_t *wnd_name)
   if (wnd)
 	return wnd;
   else
-    return NULL;
+	return NULL;
 }
 //---------------------------------------------------------------------------
 
@@ -2225,29 +2225,28 @@ bool FindAllProcesessByExeName(const wchar_t *name, TStringList *pid_list)
 
 void ShutdownProcessByExeName(const String &name)
 {
-  PROCESSENTRY32 pe32;
-  pe32.dwSize = sizeof(PROCESSENTRY32);
+  try
+	 {
+	   DWORD pid = GetProcessByExeName(name.c_str());
 
-  HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+	   if (!pid)
+		 throw new Exception("Process not found");
 
-  if (hProcessSnap == INVALID_HANDLE_VALUE)
-	return;
+	   HANDLE proc = OpenProcess(PROCESS_TERMINATE, 0, pid);
 
-  if (Process32First(hProcessSnap, &pe32))
-	{
-	  do
-		{
-		  if (StrCmpW(pe32.szExeFile, name.c_str()) == 0)
-			{
-			  TerminateProcess(hProcessSnap, 0);
-			  break;
-			}
-		}
-	  while (Process32Next(hProcessSnap, &pe32));
-	}
+	   if (proc == INVALID_HANDLE_VALUE)
+		 throw new Exception("Can't take process handle");
 
-  if (hProcessSnap)
-	CloseHandle(hProcessSnap);
+	   try
+		  {
+			TerminateProcess(proc, 0);
+		  }
+	   __finally {CloseHandle(proc);}
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ShutdownProcessByExeName(): " + e.ToString());
+	 }
 }
 //-------------------------------------------------------------------------
 
