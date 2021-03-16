@@ -190,6 +190,7 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   String GetPCName();
 
   TDateTime GetFileDateTime(String file);
+  int SetFileDateTime(String file, TDateTime set_date);
 
 //выгружает в list список файлов из указанного каталога
 //mask - маска имени файла

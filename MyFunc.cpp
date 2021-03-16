@@ -1835,25 +1835,76 @@ FILEINFO GetFileInfo(String path)
 
 TDateTime GetFileDateTime(String file)
 {
-  OFSTRUCT of;
-  FILETIME ft;
-  SYSTEMTIME lf;
-  HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_READ);
+  TDateTime res;
 
-  GetFileTime(hFile, NULL, NULL, &ft);
-  FileTimeToSystemTime(&ft, &lf);
+  try
+	 {
+	   OFSTRUCT of;
+	   FILETIME ft;
+	   SYSTEMTIME st;
 
-  TDateTime fdate = TDateTime(lf.wYear,
-							  lf.wMonth,
-							  lf.wDay,
-							  lf.wHour,
-							  lf.wMinute,
-							  lf.wSecond,
-							  lf.wMilliseconds);
+	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_READ);
 
-  CloseHandle(hFile);
+	   GetFileTime(hFile, NULL, NULL, &ft);
+	   FileTimeToSystemTime(&ft, &st);
+	   SystemTimeToTzSpecificLocalTime(NULL, &st, &st);
 
-  return fdate;
+	   res = TDateTime(st.wYear,
+					   st.wMonth,
+					   st.wDay,
+					   st.wHour,
+					   st.wMinute,
+					   st.wSecond,
+					   st.wMilliseconds);
+
+	   CloseHandle(hFile);
+
+	 }
+  catch (Exception &e)
+	 {
+	   res = -1;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetFileDateTime(): " + e.ToString());
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+int SetFileDateTime(String file, TDateTime set_date)
+{
+  int res;
+
+  try
+	 {
+	   OFSTRUCT of;
+	   FILETIME ft;
+	   SYSTEMTIME st;
+
+	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_READWRITE);
+
+	   if (hFile)
+		 {
+		   set_date.DecodeDate(&st.wYear,&st.wMonth, &st.wDay);
+		   set_date.DecodeTime(&st.wHour, &st.wMinute, &st.wSecond, &st.wMilliseconds);
+
+		   TzSpecificLocalTimeToSystemTime(NULL, &st, &st);
+		   SystemTimeToFileTime(&st, &ft);
+		   SetFileTime(hFile, &ft, &ft, &ft);
+
+		   CloseHandle(hFile);
+
+		   res = 1;
+		 }
+	   else
+		 res = 0;
+	 }
+  catch (Exception &e)
+	 {
+	   res = -1;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "SetFileDateTime(): " + e.ToString());
+	 }
+
+  return res;
 }
 //---------------------------------------------------------------------------
 
