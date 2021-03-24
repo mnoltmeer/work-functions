@@ -116,6 +116,18 @@ void StartProcessByExeName(const String &file);
 
 void ShutdownProcessByExeName(const String &name);
 
+//завершает приложение и ждет timeout миллисекунд
+//возвращает true если приложение успешно завершено
+//и false в противном случае
+bool CloseAppAndWait(HWND hApp, unsigned long timeout);
+bool CloseAppAndWait(DWORD app_pid, unsigned long timeout);
+
+//мониторит хендл приложения timeout миллисекунд
+//возвращает true если приложение завершилось
+//и false в противном случае
+bool WaitForAppClose(const String &exe_name, unsigned long timeout);
+bool WaitForAppClose(const wchar_t *wnd_caption, unsigned long timeout);
+
 bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all);
 bool RemoveAppAutoStart(const String &key_name, bool for_all);
 bool CheckAppAutoStart(const String &key_name, bool for_all);

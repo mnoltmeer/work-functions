@@ -2301,6 +2301,153 @@ void ShutdownProcessByExeName(const String &name)
 }
 //-------------------------------------------------------------------------
 
+bool CloseAppAndWait(HWND hApp, unsigned long timeout)
+{
+  bool res = false;
+
+  try
+	 {
+	   if (hApp)
+		 {
+		   PostMessage(hApp, WM_CLOSE, 0, 0);
+
+		   unsigned long waiting = 0;
+
+		   while (waiting < timeout)
+			 {
+			   if (!FindPIDByHandle(hApp))
+				 {
+				   res = true;
+				   break;
+				 }
+               else
+				 Sleep(100);
+
+			   waiting += 100;
+			 }
+		 }
+	   else
+         res = true;
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "CloseAppAndWait(): " + e.ToString());
+	 }
+
+  return res;
+}
+//-------------------------------------------------------------------------
+
+bool CloseAppAndWait(DWORD app_pid, unsigned long timeout)
+{
+  bool res = false;
+
+  try
+	 {
+	   if (app_pid)
+		 {
+		   HANDLE proc = OpenProcess(PROCESS_TERMINATE, 0, app_pid);
+
+		   if (proc == INVALID_HANDLE_VALUE)
+			 throw new Exception("Can't take process handle");
+
+		   try
+			  {
+				TerminateProcess(proc, 0);
+			  }
+		   __finally {CloseHandle(proc);}
+
+           unsigned long waiting = 0;
+
+		   while (waiting < timeout)
+			 {
+			   if (!FindHandleByPID(app_pid))
+				 {
+				   res = true;
+				   break;
+				 }
+			   else
+				 Sleep(100);
+
+               waiting += 100;
+			 }
+		 }
+	   else
+         res = true;
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "CloseAppAndWait(): " + e.ToString());
+	 }
+
+  return res;
+}
+//-------------------------------------------------------------------------
+
+bool WaitForAppClose(const String &exe_name, unsigned long timeout)
+{
+  bool res = false;
+
+  try
+	 {
+	   unsigned long waiting = 0;
+
+	   while (waiting < timeout)
+		 {
+		   if (!GetProcessByExeName(exe_name.c_str()))
+			 {
+			   res = true;
+			   break;
+			 }
+		   else
+			 Sleep(100);
+
+		   waiting += 100;
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "WaitForAppClose(): " + e.ToString());
+	 }
+
+  return res;
+}
+//-------------------------------------------------------------------------
+
+bool WaitForAppClose(const wchar_t *wnd_caption, unsigned long timeout)
+{
+  bool res = false;
+
+  try
+	 {
+	   unsigned long waiting = 0;
+
+	   while (waiting < timeout)
+		 {
+		   if (!FindHandleByName(wnd_caption))
+			 {
+			   res = true;
+			   break;
+			 }
+		   else
+			 Sleep(100);
+
+		   waiting += 100;
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "WaitForAppClose(): " + e.ToString());
+	 }
+
+  return res;
+}
+//-------------------------------------------------------------------------
+
 void ErrorExit(LPTSTR lpszFunction)
 {
     // Retrieve the system error message for the last-error code
