@@ -1908,6 +1908,34 @@ int SetFileDateTime(String file, TDateTime set_date)
 }
 //---------------------------------------------------------------------------
 
+void SendToLog(String message, TListBox *output)
+{
+  try
+	 {
+       SendMessage(output->Handle, LB_ADDSTRING, 0, (LPARAM)message.c_str());
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ShowLog(): " + e.ToString());
+	 }
+}
+//---------------------------------------------------------------------------
+
+void SendToLog(String message, TMemo *output)
+{
+  try
+	 {
+	   SendMessage(output->Handle, EM_SETSEL, 0, -1);
+	   SendMessage(output->Handle, EM_SETSEL, (WPARAM)-1, -1);
+	   SendMessage(output->Handle, EM_REPLACESEL, 0, (LPARAM)message.c_str());
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ShowLog(): " + e.ToString());
+	 }
+}
+//---------------------------------------------------------------------------
+
 void ShowLog(String message, TListBox *output)
 {
   try
@@ -1937,7 +1965,7 @@ void ShowLog(String message, TMemo *output)
 						  + TimeToStr(Time())
 						  + "]"
 						  + " : "
-					 	  + message);
+						  + message);
 	 }
   catch (Exception &e)
 	 {

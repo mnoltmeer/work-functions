@@ -309,11 +309,18 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
   const wchar_t *GetReadParamResult(ReadParamExitCodes code);
   const wchar_t *GetLastReadParamResult();
 
+//добавляет строку события в листбокс через посылку WinAPI-сообщения
+  void SendToLog(String message, TListBox *output);
+
+//добавляет строку события в мемо через посылку WinAPI-сообщения
+  void SendToLog(String message, TMemo *output);
+
 //выводит лог события в листбокс
   void ShowLog(String message, TListBox *output);
 
 //выводит лог события в мемо
   void ShowLog(String message, TMemo *output);
+
   void SaveLog(String text, TStringList *log);
 
 //заносит лог события в файл
