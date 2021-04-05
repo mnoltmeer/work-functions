@@ -380,7 +380,7 @@ HWND FindHandleByName(const wchar_t *wnd_name);
 int FindAllHandlesByPID(DWORD pid, std::vector<HWND> *handle_list);
 DWORD FindPIDByHandle(HWND h);
 HWND FindHandleByPID(DWORD pid);
-DWORD GetProcessByExeName(wchar_t *name);
+DWORD GetProcessByExeName(const wchar_t *name);
 bool FindAllProcesessByExeName(const wchar_t *name, TStringList *pid_list);
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);

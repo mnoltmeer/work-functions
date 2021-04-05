@@ -16,7 +16,7 @@ This program is free software: you can redistribute it and/or modify
 */
 
 //---------------------------------------------------------------------------
-#define UNICODE
+//#define UNICODE
 
 #include <vcl.h>
 #include <shellapi.h>
@@ -2246,7 +2246,7 @@ int FindAllHandlesByPID(DWORD pid, std::vector<HWND> *handle_list)
 }
 //---------------------------------------------------------------------------
 
-DWORD GetProcessByExeName(wchar_t *name)
+DWORD GetProcessByExeName(const wchar_t *name)
 {
   DWORD Pid;
   PROCESSENTRY32 pe32;
