@@ -453,15 +453,12 @@ String LoadTextFile(String filepath)
 }
 //---------------------------------------------------------------------------
 
-String ReadStringFromBinaryStream(TFileStream *stream,
-								  int pos, int read_size)
+String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size)
 {
   String res;
 
   try
 	 {
-	   int l = 0;
-       wchar_t smb;
 	   wchar_t *str = new wchar_t[read_size + 1];
 
 	   try
@@ -469,11 +466,7 @@ String ReadStringFromBinaryStream(TFileStream *stream,
 			if (pos >= 0)
 			  stream->Position = pos;
 
-			for (int i = 0; i < read_size; i++)
-			   {
-				 stream->Position += stream->Read(&smb, sizeof(wchar_t));
-				 l += swprintf_s(str + l, read_size + 1, L"%c", smb);
-			   }
+			stream->Position += stream->Read(&str, wcslen(str) * sizeof(wchar_t));
 
 			res = str;
 		  }
@@ -490,7 +483,7 @@ String ReadStringFromBinaryStream(TFileStream *stream,
 }
 //---------------------------------------------------------------------------
 
-String ReadStringFromBinaryStream(TFileStream *stream, int read_size)
+String ReadStringFromBinaryStream(TStream *stream, int read_size)
 {
   String res;
 
@@ -509,7 +502,7 @@ String ReadStringFromBinaryStream(TFileStream *stream, int read_size)
 }
 //---------------------------------------------------------------------------
 
-void WriteStringIntoBinaryStream(TFileStream *stream, String str)
+void WriteStringIntoBinaryStream(TStream *stream, String str)
 {
   try
 	 {

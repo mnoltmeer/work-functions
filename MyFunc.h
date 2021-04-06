@@ -144,11 +144,13 @@ int SendToHost(const wchar_t *host, int port, const String &data);
 
 //выгружает в String содержимое текстового файла
   String LoadTextFile(String filepath);
+
 //читает из потока строку, начиная с позиции pos
-  String ReadStringFromBinaryStream(TFileStream *stream,
-								   int pos, int read_size);
+  String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size);
 //читает из потока строку из текущей позиции
-  String ReadStringFromBinaryStream(TFileStream *stream, int read_size);
+  String ReadStringFromBinaryStream(TStream *stream, int read_size);
+
+  void WriteStringIntoBinaryStream(TStream *stream, String str);
 
 //открывает файл (любой), выделяет память под него
 //и задает указатель (void *buf) на область памяти
@@ -159,8 +161,6 @@ int SendToHost(const wchar_t *host, int port, const String &data);
   void AddToFile(String file, String text);
 
   int SaveVectorToFile(std::vector <String> *vecStr, String path);
-
-  void WriteStringIntoBinaryStream(TFileStream *stream, String str);
 
   unsigned long GetFileSize(String file);
 
