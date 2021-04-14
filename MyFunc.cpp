@@ -1307,7 +1307,7 @@ void StrToList(TStringList *list, String text, String delim)
 	   if (text.Pos(delim) == 0)
 		 if (text != "")
 		   {
-			 if ((text != "\n") && (text != "\n\r"))
+			 if ((text != "\n") && (text != "\r\n"))
 			   list->Add(text);
 	  		}
 	 }
@@ -1353,17 +1353,23 @@ String ListToStr(TStringList *list, String delim)
 {
   String str_list;
 
+  try
+	 {
 //если разделитель не задан, по умолчанию используется признак конца строки
-  if (delim == NULL)
-    delim = "\n";
+	   if (delim == NULL)
+		 delim = "\r\n";
 
-  if (list->Count > 0)
-    for (int i = 0; i < list->Count; i++)
-      {
-        str_list = str_list + list->Strings[i] + delim;
-      }
-  else
-    str_list = "ListToStr: !empty string!";
+	   if (list->Count > 0)
+		 {
+		   for (int i = 0; i < list->Count; i++)
+			  str_list = str_list + list->Strings[i] + delim;
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ListToStr(): " + e.ToString());
+	   str_list = "";
+	 }
 
   return str_list;
 }
