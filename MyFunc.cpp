@@ -1363,6 +1363,8 @@ String ListToStr(TStringList *list, String delim)
 		 {
 		   for (int i = 0; i < list->Count; i++)
 			  str_list = str_list + list->Strings[i] + delim;
+
+           str_list = str_list.Delete(str_list.LastDelimiter(delim), delim.Length());
 		 }
 	 }
   catch (Exception &e)
