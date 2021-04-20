@@ -1050,7 +1050,7 @@ String GetDirPathFromFilePath(const String &file)
 {
   int pos = file.LastDelimiter("\\");
 
-  return file.SubString(1, pos);
+  return file.SubString(1, pos - 1);
 }
 //---------------------------------------------------------------------------
 
