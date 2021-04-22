@@ -392,6 +392,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 //  ErrorExit(TEXT("GetProcessId"));
 void ErrorExit(LPTSTR lpszFunction);
 
+//то же, но вывод в String
+String LastErrorToString();
+
 //---------------------------------------------------------------------------
 //import from somefunc.h
 //LEGACY CODE :)
