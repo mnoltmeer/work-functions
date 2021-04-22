@@ -29,6 +29,7 @@ This program is free software: you can redistribute it and/or modify
 #include <Registry.hpp>
 #include <IdFTP.hpp>
 #include <Tlhelp32.h>
+#include <IdHashMessageDigest.hpp>
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -331,6 +332,8 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 
 //высчитывает контрольную сумму файла (MD5) и возвращает ее
   //String GetCRC(const String file);
+
+  String MD5(const String &text);
 
 //проверяет, является ли введенный текст айпишником
 //!в доработке!

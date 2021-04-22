@@ -2546,3 +2546,18 @@ String LastErrorToString()
 }
 //---------------------------------------------------------------------------
 
+String MD5(const String &text)
+{
+  String res;
+
+  TIdHashMessageDigest5 *idmd5 = new TIdHashMessageDigest5();
+
+  try
+	 {
+	   res = idmd5->HashStringAsHex(Text);
+	 }
+  __finally {delete idmd5;}
+
+  return res;
+}
+//---------------------------------------------------------------------------

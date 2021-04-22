@@ -91,7 +91,7 @@ TMemoryStream *TSAESCypher::Encrypt(TMemoryStream *data, const char *pass)
 
 	   try
 		  {
-            data = cypher->Data;
+			data = cypher->Data;
 		  }
 	   __finally {delete cypher;}
 	 }
@@ -112,6 +112,22 @@ TAESCypher::TAESCypher(TMemoryStream *data, const char *password, CypherOperatio
 	 {
 	   FData = data;
 	   DataCrypt(FData, password, operation);
+	 }
+  catch (Exception &e)
+	 {
+       FData->Clear();
+	   FLastError = e.ToString();
+	 }
+}
+//---------------------------------------------------------------------------
+
+TAESCypher::TAESCypher(const String &data, const char *password)
+{
+  try
+	 {
+	   FData = new TMemoryStream();
+	   FData->Write(data.c_str(), data.Length() * sizeof(wchar_t));
+	   DataCrypt(FData, password, coCrypt);
 	 }
   catch (Exception &e)
 	 {
@@ -200,7 +216,7 @@ void TAESCypher::DataCrypt(TMemoryStream *ms, const char *password, CypherOperat
 }
 //---------------------------------------------------------------------------
 
-String TAESCypher::DataInString()
+String TAESCypher::DataToString()
 {
   String res;
 
@@ -225,13 +241,13 @@ String TAESCypher::DataInString()
 }
 //---------------------------------------------------------------------------
 
-const wchar_t *TAESCypher::DataInChar()
+const wchar_t *TAESCypher::DataToChar()
 {
-  return DataInString().c_str();
+  return DataToString().c_str();
 }
 //---------------------------------------------------------------------------
 
-std::vector<char> TAESCypher::DataInVector()
+std::vector<char> TAESCypher::DataToVector()
 {
   std::vector<char> res(Data->Size);
 
@@ -249,9 +265,9 @@ std::vector<char> TAESCypher::DataInVector()
 }
 //---------------------------------------------------------------------------
 
-BYTE *TAESCypher::DataInByte()
+BYTE *TAESCypher::DataToByte()
 {
-  return reinterpret_cast<BYTE*>(DataInVector().data());
+  return reinterpret_cast<BYTE*>(DataToVector().data());
 }
 //---------------------------------------------------------------------------
 

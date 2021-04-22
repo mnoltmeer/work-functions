@@ -39,12 +39,13 @@ private:
 
 public:
 	TAESCypher(TMemoryStream *data, const char *password, CypherOperation operation);
+	TAESCypher(const String &data, const char *password);
 	inline virtual ~TAESCypher(){delete[] FPass; delete FData;}
 
-	String DataInString();
-	const wchar_t *DataInChar();
-	std::vector<char> DataInVector();
-	BYTE *DataInByte();
+	String DataToString();
+	const wchar_t *DataToChar();
+	std::vector<char> DataToVector();
+	BYTE *DataToByte();
 
 	__property TMemoryStream *Data = {read = FData};
     __property String LastError = {read = FLastError};
