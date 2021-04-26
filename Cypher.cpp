@@ -61,6 +61,8 @@ String LastErrorToString()
   return res;
 }
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 TMemoryStream *TSAESCypher::Crypt(TMemoryStream *data, const char *pass)
 {
@@ -70,7 +72,8 @@ TMemoryStream *TSAESCypher::Crypt(TMemoryStream *data, const char *pass)
 
 	   try
 		  {
-            data = cypher->Data;
+			data->LoadFromStream(cypher->Data);
+			data->Position = 0;
 		  }
 	   __finally {delete cypher;}
 	 }
@@ -91,7 +94,8 @@ TMemoryStream *TSAESCypher::Encrypt(TMemoryStream *data, const char *pass)
 
 	   try
 		  {
-			data = cypher->Data;
+			data->LoadFromStream(cypher->Data);
+            data->Position = 0;
 		  }
 	   __finally {delete cypher;}
 	 }
@@ -110,7 +114,8 @@ TAESCypher::TAESCypher(TMemoryStream *data, const char *password, CypherOperatio
 {
   try
 	 {
-	   FData = data;
+	   FData = new TMemoryStream();
+	   FData->LoadFromStream(data);
 	   DataCrypt(FData, password, operation);
 	 }
   catch (Exception &e)
@@ -137,9 +142,24 @@ TAESCypher::TAESCypher(const String &data, const char *password)
 }
 //---------------------------------------------------------------------------
 
+TAESCypher::TAESCypher(const char *password)
+{
+  try
+	 {
+	   FData = new TMemoryStream();
+	   FPass = new char[strlen(password) + 1];
+	   strcpy(FPass, password);
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = e.ToString();
+	 }
+}
+//---------------------------------------------------------------------------
+
 bool TAESCypher::LoadCryptSystem(const char *pass)
 {
-  bool res;
+  bool res = true;
 
   try
 	 {
@@ -216,6 +236,40 @@ void TAESCypher::DataCrypt(TMemoryStream *ms, const char *password, CypherOperat
 }
 //---------------------------------------------------------------------------
 
+void TAESCypher::CryptFile(const String &file)
+{
+  try
+	 {
+	   if (!FPass)
+		 throw new Exception("Crypt password ont defined!");
+
+	   FData->LoadFromFile(file);
+	   DataCrypt(FData, FPass, coCrypt);
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = e.ToString();
+	 }
+}
+//---------------------------------------------------------------------------
+
+void TAESCypher::EncryptFile(const String &file)
+{
+  try
+	 {
+       if (!FPass)
+		 throw new Exception("Crypt password ont defined!");
+
+	   FData->LoadFromFile(file);
+	   DataCrypt(FData, FPass, coEncrypt);
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = e.ToString();
+	 }
+}
+//---------------------------------------------------------------------------
+
 String TAESCypher::DataToString()
 {
   String res;
@@ -268,6 +322,19 @@ std::vector<char> TAESCypher::DataToVector()
 BYTE *TAESCypher::DataToByte()
 {
   return reinterpret_cast<BYTE*>(DataToVector().data());
+}
+//---------------------------------------------------------------------------
+
+void TAESCypher::DataToFile(const String &file)
+{
+  try
+	 {
+	   Data->SaveToFile(file);
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = e.ToString();
+	 }
 }
 //---------------------------------------------------------------------------
 

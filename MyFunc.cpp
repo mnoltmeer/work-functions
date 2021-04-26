@@ -2554,7 +2554,7 @@ String MD5(const String &text)
 
   try
 	 {
-	   res = idmd5->HashStringAsHex(Text);
+	   res = idmd5->HashStringAsHex(text);
 	 }
   __finally {delete idmd5;}
 

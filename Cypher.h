@@ -27,10 +27,10 @@ String LastErrorToString();
 class TAESCypher //звичайний клас, шифрує/дешифрує дані при створенні
 {
 private:
-	const char *FPass;
+	char *FPass;
 	TMemoryStream *FData; //буфер у якому зберігаються дані (при шифровці та дешифровці)
 	String FLastError;
-	HCRYPTPROV hProv; //дескриптор криптопровайдера
+    HCRYPTPROV hProv; //дескриптор криптопровайдера
 	HCRYPTKEY hKey; //дескриптор ключа, созданного из хэш-кода
 	HCRYPTHASH hHash; //дескриптор хэш-объекта
     bool LoadCryptSystem(const char *pass);
@@ -40,12 +40,17 @@ private:
 public:
 	TAESCypher(TMemoryStream *data, const char *password, CypherOperation operation);
 	TAESCypher(const String &data, const char *password);
-	inline virtual ~TAESCypher(){delete[] FPass; delete FData;}
+    TAESCypher(const char *password);
+	inline virtual ~TAESCypher(){if (FData) delete FData; if (FPass) delete[] FPass;}
 
 	String DataToString();
 	const wchar_t *DataToChar();
 	std::vector<char> DataToVector();
 	BYTE *DataToByte();
+    void DataToFile(const String &file);
+
+	void CryptFile(const String &file);
+	void EncryptFile(const String &file);
 
 	__property TMemoryStream *Data = {read = FData};
     __property String LastError = {read = FLastError};
