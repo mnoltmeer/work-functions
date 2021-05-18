@@ -135,7 +135,10 @@ bool CheckAppAutoStart(const String &key_name, bool for_all);
 
 TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port);
 void FreeSimpleTCPSender(TIdTCPClient *sender);
+//надсилає запит до хоста, якщо сталась помилка повертає 0
+//якщо запит був успішний у rw_bufer буде записано відповідь хосту
 int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer);
+//надсилає дані хосту, якщо сталась помилка повертає 0
 int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer);
 int SendToHost(const wchar_t *host, int port, const String &data);
 
