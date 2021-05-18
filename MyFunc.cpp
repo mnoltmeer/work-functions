@@ -316,6 +316,7 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 	   try
 		  {
 			sender->Connect();
+            rw_bufer->Position = 0;
 			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
 		  }
 	   catch (Exception &e)
@@ -331,7 +332,6 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
        try
 		  {
 			rw_bufer->Clear();
-            rw_bufer->Position = 0;
 			sender->IOHandler->ReadStream(rw_bufer);
 		  }
 	   catch (Exception &e)
@@ -367,6 +367,7 @@ int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 		  {
 			sender = CreateSimpleTCPSender(host, port);
 			sender->Connect();
+            rw_bufer->Position = 0;
 			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
 		  }
 	   catch (Exception &e)
