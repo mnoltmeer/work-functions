@@ -582,7 +582,7 @@ bool RemoveAppAutoStart(const String &key_name, bool for_all)
 
 	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
 		 {
-           if (reg->ValueExists(key_name))
+		   if (reg->ValueExists(key_name))
 			 {
 			   reg->DeleteValue(key_name);
 			   result = true;
@@ -602,7 +602,7 @@ bool RemoveAppAutoStart(const String &key_name, bool for_all)
 bool CheckAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
-  TRegistry *reg = new TRegistry();
+  TRegistry *reg = new TRegistry(KEY_READ);
 
   try
 	 {
