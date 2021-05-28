@@ -115,7 +115,7 @@ void StartProcessByExeName(const String &file, const String &parent_dir);
 void StartProcessByExeName(const String &file, const String &params, const String &parent_dir);
 void StartProcessByExeName(const String &file);
 
-void ShutdownProcessByExeName(const String &name);
+bool ShutdownProcessByExeName(const String &name);
 
 //завершает приложение и ждет timeout миллисекунд
 //возвращает true если приложение успешно завершено

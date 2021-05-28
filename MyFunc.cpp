@@ -2304,8 +2304,10 @@ bool FindAllProcesessByExeName(const wchar_t *name, TStringList *pid_list)
 }
 //---------------------------------------------------------------------------
 
-void ShutdownProcessByExeName(const String &name)
+bool ShutdownProcessByExeName(const String &name)
 {
+  bool res;
+
   try
 	 {
 	   DWORD pid = GetProcessByExeName(name.c_str());
@@ -2321,13 +2323,17 @@ void ShutdownProcessByExeName(const String &name)
 	   try
 		  {
 			TerminateProcess(proc, 0);
+			res = true;
 		  }
 	   __finally {CloseHandle(proc);}
 	 }
   catch (Exception &e)
 	 {
+	   res = false;
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ShutdownProcessByExeName(): " + e.ToString());
 	 }
+
+  return res;
 }
 //-------------------------------------------------------------------------
 
