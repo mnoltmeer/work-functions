@@ -1,5 +1,5 @@
 /*!
-Copyright 2014-2020 Maxim Noltmeer (m.noltmeer@gmail.com)
+Copyright 2014-2021 Maxim Noltmeer (m.noltmeer@gmail.com)
 
 This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ This program is free software: you can redistribute it and/or modify
 #include <vcl.h>
 #include <shellapi.h>
 #include <strsafe.h>
+#include <memory>
 #pragma hdrstop
 
 #include "MyFunc.h"
@@ -35,25 +36,21 @@ String UsedAppLogDir;
 //---------------------------------------------------------------------------
 void CPTransOut(UINT mode, const char *in_str, UINT str_len)
 {
-  char *out_str = new char[str_len];
+  auto out_str = std::make_unique<char[]>(str_len);
 
   switch (mode)
      {
        case CHAROEM:
 		  {
-			CharToOemBuffA(in_str, out_str, str_len);
-            printf(out_str);
-            delete[] out_str;
-            out_str = NULL;
-            break;
+			CharToOemBuffA(in_str, out_str.get(), str_len);
+			printf(out_str.get());
+			break;
           }
 
        case OEMCHAR:
 		  {
-			OemToCharBuffA(in_str, out_str, str_len);
-            printf(out_str);
-            delete[] out_str;
-            out_str = NULL;
+			OemToCharBuffA(in_str, out_str.get(), str_len);
+            printf(out_str.get());
 			break;
           }
      }
@@ -62,19 +59,19 @@ void CPTransOut(UINT mode, const char *in_str, UINT str_len)
 
 wchar_t* __fastcall UnicodeOf(const char* c)
 {
-	static wchar_t w[STR_CONV_BUF_SIZE];
-	memset(w,0,sizeof(w));
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, c, strlen(c), w, STR_CONV_BUF_SIZE);
-	return(w);
+  static wchar_t w[STR_CONV_BUF_SIZE];
+  memset(w,0,sizeof(w));
+  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, c, strlen(c), w, STR_CONV_BUF_SIZE);
+  return(w);
 }
 //---------------------------------------------------------------------------
 
 char* __fastcall AnsiOf(const wchar_t* w)
 {
-	static char c[STR_CONV_BUF_SIZE];
-	memset(c, 0, sizeof(c));
-	WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, w, wcslen(w), c, STR_CONV_BUF_SIZE, NULL, NULL);
-	return(c);
+  static char c[STR_CONV_BUF_SIZE];
+  memset(c, 0, sizeof(c));
+  WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, w, wcslen(w), c, STR_CONV_BUF_SIZE, NULL, NULL);
+  return(c);
 }
 //---------------------------------------------------------------------------
 
@@ -276,8 +273,12 @@ TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "CreateSimpleTCPSender(): " + e.ToString());
+
+	   if (sender) delete sender;
+
 	   sender = NULL;
-	   throw new Exception("Error creating TCPSender");
+
+	   throw Exception("Error creating TCPSender");
      }
 
   return sender;
@@ -299,93 +300,71 @@ void FreeSimpleTCPSender(TIdTCPClient *sender)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "CreateSimpleTCPSender(): " + e.ToString());
-	   throw new Exception("Error deleting TCPSender");
+	   throw Exception("Error deleting TCPSender");
 	 }
 }
 //---------------------------------------------------------------------------
 
 int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 {
-  TIdTCPClient *sender;
-  int res = 1;
+  std::unique_ptr<TIdTCPClient> sender(CreateSimpleTCPSender(host, port));
 
   try
 	 {
-	   sender = CreateSimpleTCPSender(host, port);
-
-	   try
-		  {
-			sender->Connect();
-            rw_bufer->Position = 0;
-			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								String(host) + ":" +
-								IntToStr(port) + " " +
-								"помилка відправки даних: " +
-								e.ToString());
-			res = 0;
-		  }
-
-       try
-		  {
-			rw_bufer->Clear();
-			sender->IOHandler->ReadStream(rw_bufer);
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								String(host) + ":" +
-								IntToStr(port) + " " +
-								"помилка отримання даних: " +
-								e.ToString());
-			res = 0;
-		  }
-
+	   sender->Connect();
 	   rw_bufer->Position = 0;
+	   sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
 	 }
-  __finally
+  catch (Exception &e)
 	 {
-	   if (sender)
-		 FreeSimpleTCPSender(sender);
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   String(host) + ":" +
+						   IntToStr(port) + " " +
+						   "помилка відправки даних: " +
+						   e.ToString());
+	   return 0;
 	 }
 
-  return res;
+  try
+	 {
+	   rw_bufer->Clear();
+	   sender->IOHandler->ReadStream(rw_bufer);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   String(host) + ":" +
+						   IntToStr(port) + " " +
+						   "помилка отримання даних: " +
+						   e.ToString());
+	   return 0;
+	 }
+
+  rw_bufer->Position = 0;
+
+  return 1;
 }
 //---------------------------------------------------------------------------
 
 int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 {
-  TIdTCPClient *sender;
+  std::unique_ptr<TIdTCPClient> sender(CreateSimpleTCPSender(host, port));
   int res = 1;
 
   try
 	 {
-	   try
-		  {
-			sender = CreateSimpleTCPSender(host, port);
-			sender->Connect();
-            rw_bufer->Position = 0;
-			sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								String(host) + ":" +
-								IntToStr(port) + " " +
-								"помилка відправки даних: " +
-								e.ToString());
-			res = 0;
-		  }
-
-	   rw_bufer->Clear();
+	   sender->Connect();
+	   rw_bufer->Position = 0;
+	   sender->IOHandler->Write(rw_bufer, rw_bufer->Size, true);
 	 }
-  __finally
+  catch (Exception &e)
 	 {
-	   if (sender)
-		 FreeSimpleTCPSender(sender);
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   String(host) + ":" +
+						   IntToStr(port) + " " +
+						   "помилка відправки даних: " +
+						   e.ToString());
+	   res = 0;
 	 }
 
   return res;
@@ -394,35 +373,24 @@ int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 
 int SendToHost(const wchar_t *host, int port, const String &data)
 {
-  TIdTCPClient *sender;
-  int res = 0;
-  TStringStream *ms = new TStringStream("", TEncoding::UTF8, true);
+  std::unique_ptr<TIdTCPClient> sender(CreateSimpleTCPSender(host, port));
+  auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
+  int res = 1;
 
   try
 	 {
-	   try
-		  {
-			sender = CreateSimpleTCPSender(host, port);
-			sender->Connect();
-            ms->Position = 0;
-			sender->IOHandler->Write(ms, ms->Size, true);
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								String(host) + ":" +
-								IntToStr(port) + " " +
-								"помилка відправки даних: " +
-								e.ToString());
-			res = -1;
-		  }
+	   sender->Connect();
+	   ms->Position = 0;
+	   sender->IOHandler->Write(ms.get(), ms->Size, true);
 	 }
-  __finally
+  catch (Exception &e)
 	 {
-	   delete ms;
-
-	   if (sender)
-		 FreeSimpleTCPSender(sender);
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   String(host) + ":" +
+						   IntToStr(port) + " " +
+						   "помилка відправки даних: " +
+						   e.ToString());
+	   res = 0;
 	 }
 
   return res;
@@ -434,10 +402,11 @@ String LoadTextFile(String filepath)
   String file_text;
 
   if (FileExists(filepath))
-    {
+	{
 //открываем файл
-	  TStringStream *srv_file = new TStringStream("", TEncoding::UTF8, true);
-      srv_file->LoadFromFile(filepath);
+	  auto srv_file = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
+
+	  srv_file->LoadFromFile(filepath);
 	  srv_file->Position = 0;
 	  file_text = srv_file->ReadString(srv_file->Size);
     }
@@ -460,18 +429,14 @@ String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size)
 
   try
 	 {
-	   wchar_t *str = new wchar_t[read_size + 1];
+	   auto str = std::make_unique<wchar_t[]>(read_size + 1);
 
-	   try
-		  {
-			if (pos >= 0)
-			  stream->Position = pos;
+	   if (pos >= 0)
+		 stream->Position = pos;
 
-			stream->Position += stream->Read(&str, wcslen(str) * sizeof(wchar_t));
+	   stream->Position += stream->Read(&str, wcslen(str.get()) * sizeof(wchar_t));
 
-			res = str;
-		  }
-	   __finally {delete[] str;}
+	   res = str.get();
 	 }
   catch (Exception &e)
 	 {
@@ -520,7 +485,7 @@ void WriteStringIntoBinaryStream(TStream *stream, String str)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-	   					   "GetStringFromBinaryStream(): " + e.ToString());
+						   "GetStringFromBinaryStream(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -528,41 +493,37 @@ void WriteStringIntoBinaryStream(TStream *stream, String str)
 bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all)
 {
   bool result;
-  TRegistry *reg = new TRegistry();
+  auto reg = std::make_unique<TRegistry>();
 
-  try
-	 {
-	   if (for_all)
-		 reg->RootKey = HKEY_LOCAL_MACHINE;
-	   else
-		 reg->RootKey = HKEY_CURRENT_USER;
+  if (for_all)
+	reg->RootKey = HKEY_LOCAL_MACHINE;
+  else
+	reg->RootKey = HKEY_CURRENT_USER;
 
-	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
-		 {
-		   String auto_path;
+  if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+	{
+	  String auto_path;
 
-		   if (reg->ValueExists(key_name))
-			 {
-			   auto_path = reg->ReadString(key_name);
+	  if (reg->ValueExists(key_name))
+		{
+		  auto_path = reg->ReadString(key_name);
 
-			   if (auto_path != app_path)
-				 {
-				   reg->WriteString(key_name, app_path);
-				   result = true;
-				 }
-			   else
-				result = true;
-			 }
-		   else
-			 {
-			   reg->WriteString(key_name, app_path);
-			   result = true;
-			 }
-		 }
-	   else
-		 result = false;
-	 }
-  __finally {delete reg;}
+		  if (auto_path != app_path)
+			{
+			  reg->WriteString(key_name, app_path);
+			  result = true;
+			}
+		  else
+			result = true;
+		}
+	  else
+		{
+		  reg->WriteString(key_name, app_path);
+		  result = true;
+		}
+	}
+  else
+	result = false;
 
   return result;
 }
@@ -571,29 +532,25 @@ bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_al
 bool RemoveAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
-  TRegistry *reg = new TRegistry();
+  auto reg = std::make_unique<TRegistry>();
 
-  try
-	 {
-	   if (for_all)
-		 reg->RootKey = HKEY_LOCAL_MACHINE;
-	   else
-		 reg->RootKey = HKEY_CURRENT_USER;
+  if (for_all)
+	reg->RootKey = HKEY_LOCAL_MACHINE;
+  else
+	reg->RootKey = HKEY_CURRENT_USER;
 
-	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
-		 {
-		   if (reg->ValueExists(key_name))
-			 {
-			   reg->DeleteValue(key_name);
-			   result = true;
-			 }
-		   else
-			 result = false;
-		 }
-	   else
-         result = false;
-	 }
-  __finally {delete reg;}
+  if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+	{
+	  if (reg->ValueExists(key_name))
+		{
+		  reg->DeleteValue(key_name);
+		  result = true;
+		}
+	  else
+	    result = false;
+	}
+  else
+	result = false;
 
   return result;
 }
@@ -602,26 +559,22 @@ bool RemoveAppAutoStart(const String &key_name, bool for_all)
 bool CheckAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
-  TRegistry *reg = new TRegistry(KEY_READ);
+  auto reg = std::make_unique<TRegistry>(KEY_READ);
 
-  try
-	 {
-	   if (for_all)
-		 reg->RootKey = HKEY_LOCAL_MACHINE;
-	   else
-		 reg->RootKey = HKEY_CURRENT_USER;
+  if (for_all)
+	reg->RootKey = HKEY_LOCAL_MACHINE;
+  else
+	reg->RootKey = HKEY_CURRENT_USER;
 
-	   if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
-		 {
-		   if (reg->ValueExists(key_name))
-			 result = true;
-		   else
-			 result = false;
-		 }
-	   else
-         result = false;
-	 }
-  __finally {delete reg;}
+  if (reg->OpenKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", false))
+	{
+	  if (reg->ValueExists(key_name))
+		result = true;
+	  else
+	  result = false;
+	}
+  else
+    result = false;
 
   return result;
 }
@@ -660,14 +613,17 @@ int LoadFile(String filepath, void *buf)
 //сохраняет текст в файл
 void SaveToFile(String file, String text)
 {
-  TStringStream *ms = new TStringStream(text, TEncoding::UTF8, true);
+  auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
 
   try
 	 {
 	   ms->Position = 0;
 	   ms->SaveToFile(file);
 	 }
-  __finally {delete ms;}
+  catch(Exception &e)
+	{
+	  SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "SaveToFile(): " + e.ToString());
+	}
 }
 //---------------------------------------------------------------------------
 
@@ -677,16 +633,19 @@ void AddToFile(String file, String text)
 	SaveToFile(file, text);
   else
 	{
-	  TFileStream *srv_file = new TFileStream(file, fmOpenWrite);
-	  TStringStream *ms = new TStringStream(text, TEncoding::UTF8, true);
+	  auto srv_file = std::make_unique<TFileStream>(file, fmOpenWrite);
+	  auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
 
 	  try
 		 {
 		   ms->Position = 0;
 		   srv_file->Position = srv_file->Size;
-		   srv_file->CopyFrom(ms, ms->Size);
+		   srv_file->CopyFrom(ms.get(), ms->Size);
 		 }
-	  __finally {delete srv_file; delete ms;}
+	  catch(Exception &e)
+		 {
+		   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "AddToFile(): " + e.ToString());
+		 }
 	}
 }
 //---------------------------------------------------------------------------
@@ -769,31 +728,25 @@ int GetFileCountRegEx(String search_dir, String reg_exp)
 
 int GetFileCountSubDirs(String search_dir, String mask)
 {
-  TStringList *DirList = new TStringList();
+  auto DirList = std::make_unique<TStringList>();
   String src_name;
   int FileCount = 0;
 
+  FileCount = GetFileCount(search_dir, mask);
+
   try
 	 {
-	   FileCount = GetFileCount(search_dir, mask);
+	   GetDirList(DirList.get(), search_dir, WITH_FULL_PATH);
 
-	   try
-		  {
-			GetDirList(DirList, search_dir, WITH_FULL_PATH);
-
-            for (int i = 0; i < DirList->Count; i++)
-			   {
-				 FileCount += GetFileCount(DirList->Strings[i], mask);
-			   }
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								"GetFileCountSubDirs(): " + e.ToString());
-			FileCount = 0;
-		  }
+	   for (int i = 0; i < DirList->Count; i++)
+		  FileCount += GetFileCount(DirList->Strings[i], mask);
 	 }
-  __finally {delete DirList;}
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   "GetFileCountSubDirs(): " + e.ToString());
+	   FileCount = 0;
+	 }
 
   return FileCount;
 }
@@ -801,31 +754,25 @@ int GetFileCountSubDirs(String search_dir, String mask)
 
 int GetFileCountSubDirsRegEx(String search_dir, String reg_exp)
 {
-  TStringList *DirList = new TStringList();
+  auto DirList = std::make_unique<TStringList>();
   String src_name;
   int FileCount = 0;
 
+  FileCount = GetFileCountRegEx(search_dir, reg_exp);
+
   try
 	 {
-	   FileCount = GetFileCountRegEx(search_dir, reg_exp);
+	   GetDirList(DirList.get(), search_dir, WITH_FULL_PATH);
 
-	   try
-		  {
-			GetDirList(DirList, search_dir, WITH_FULL_PATH);
-
-            for (int i = 0; i < DirList->Count; i++)
-			   {
-				 FileCount += GetFileCountRegEx(DirList->Strings[i], reg_exp);
-			   }
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-								"GetFileCountSubDirsRegEx(): " + e.ToString());
-			FileCount = 0;
-		  }
+	   for (int i = 0; i < DirList->Count; i++)
+		  FileCount += GetFileCountRegEx(DirList->Strings[i], reg_exp);
 	 }
-  __finally {delete DirList;}
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+						   "GetFileCountSubDirsRegEx(): " + e.ToString());
+	   FileCount = 0;
+	 }
 
   return FileCount;
 }
@@ -935,20 +882,16 @@ unsigned long GetFileSize(String filepath)
   if (!FileExists(filepath))
 	return -1;
 
-  TFileStream *fs = new TFileStream(filepath, fmOpenRead|fmShareDenyNone);
+  auto fs = std::make_unique<TFileStream>(filepath, fmOpenRead|fmShareDenyNone);
 
   try
 	 {
-	   try
-		  {
-			file_size = fs->Size;
-		  }
-       catch (Exception &e)
-		  {
-	   		file_size = -1;
-		  }
+	   file_size = fs->Size;
 	 }
-  __finally {if (fs) delete fs;}
+  catch (Exception &e)
+	 {
+	   file_size = -1;
+	 }
 
   return file_size;
 }
@@ -1074,13 +1017,11 @@ String GetFileExtensionFromFileName(const String &file)
 String GetPCName()
 {
   unsigned long sz = MAX_COMPUTERNAME_LENGTH + 1;
-  wchar_t *buff = new wchar_t[sz];
+  auto buff = std::make_unique<wchar_t[]>(sz);
 
-  GetComputerName(buff, &sz);
+  GetComputerName(buff.get(), &sz);
 
-  String res = buff;
-
-  delete[] buff;
+  String res = buff.get();
 
   return res;
 }
@@ -1256,27 +1197,23 @@ void DeleteFilesExceptList(String dir, TStringList *names_list)
   bool in_list;
   String local_name, remote_name;
 
-  TStringList *local_files = new TStringList();
+  auto local_files = std::make_unique<TStringList>();
 
-  try
+  GetFileList(local_files.get(), dir, "*", WITHOUT_DIRS, WITHOUT_FULL_PATH);
+
+  for (int i = 0; i < local_files->Count; i++)
 	 {
-	   GetFileList(local_files, dir, "*", WITHOUT_DIRS, WITHOUT_FULL_PATH);
+	   in_list = false;
 
-	   for (int i = 0; i < local_files->Count; i++)
+	   for (int j = 0; j < names_list->Count; j++)
 		  {
-			in_list = false;
-
-			for (int j = 0; j < names_list->Count; j++)
-			   {
-				 if (UpperCase(local_files->Strings[i]) == UpperCase(names_list->Strings[j]))
-				   in_list = true;
-			   }
-
-			if (!in_list)
-              DeleteFile(dir + "\\" + local_files->Strings[i]);
+			if (UpperCase(local_files->Strings[i]) == UpperCase(names_list->Strings[j]))
+			  in_list = true;
 		  }
+
+	   if (!in_list)
+		 DeleteFile(dir + "\\" + local_files->Strings[i]);
 	 }
-  __finally {delete local_files;}
 }
 //---------------------------------------------------------------------------
 
@@ -1334,19 +1271,13 @@ void StrToList(TStringList *list, String text)
 
 void StrToList(std::vector<String> *list, String text, String delim)
 {
-  TStringList *l = new TStringList();
+  auto tmp = std::make_unique<TStringList>();
 
-  try
-	 {
-	   StrToList(l, text, delim);
-	   list->clear();
+  StrToList(tmp.get(), text, delim);
+  list->clear();
 
-	   for (int i = 0; i < l->Count; i++)
-		  {
-			list->push_back(l->Strings[i]);
-		  }
-	 }
-  __finally {delete l;}
+  for (int i = 0; i < tmp->Count; i++)
+	 list->push_back(tmp->Strings[i]);
 }
 //---------------------------------------------------------------------------
 
@@ -1380,88 +1311,67 @@ String ListToStr(TStringList *list, String delim)
 
 String GetConfigLine(String conf_file, int index)
 {
- String param;
+  String param;
 
- if (index < 0)
-   {
-     param = "GetConfigLine: !incorrect index!";
-     return param;
-   }
+  if (index < 0)
+	{
+	  param = "GetConfigLine: !incorrect index!";
+	  return param;
+	}
     
 //создадим лист и загрузим в него содержимое конфиг-файла
- TStringList *conf = new TStringList();
+  auto conf = std::make_unique<TStringList>();
 
- try
-    {
-      conf->LoadFromFile(conf_file);
+  conf->LoadFromFile(conf_file);
 
-      if (conf->Count != 0)
-        {
+  if (conf->Count != 0)
+	{
 //если список не пустой и в нем есть строка с указанным индексом
-          if (conf->Count > index)
-            {
-              param = conf->Strings[index];
-              param = param.Delete(1, param.Pos("="));
-            }
-          else
-            param = "!no_line!";
-        }
-      else
-        param = "!no_data!";
+	  if (conf->Count > index)
+		{
+		  param = conf->Strings[index];
+		  param = param.Delete(1, param.Pos("="));
+		}
+	  else
+		param = "!no_line!";
+	}
+  else
+    param = "!no_data!";
 
-    }
- __finally
-    {
-       delete conf;
-       conf = NULL;
-    }
-
- return param;
+  return param;
 }
 //---------------------------------------------------------------------------
 
 String GetConfigLine(String conf_file, String param_name)
 {
- int length, pos = 0;
- String param = "^no_line";
+  int length, pos = 0;
+  String param = "^no_line";
+  auto conf = std::make_unique<TStringList>();
 
- TStringList *conf = new TStringList();
+  conf->LoadFromFile(conf_file);
 
- try
-    {
-      conf->LoadFromFile(conf_file);
-
-      if (conf->Count != 0)
-        {
+  if (conf->Count != 0)
+	{
 //если список не пустой и в нем есть строка с указанным индексом
 //если список не пуст, построчно сверим имена параметров с исходным
-		  int i = 0;
+	  int i = 0;
 
-		  while (i < conf->Count)
-			{
+	  while (i < conf->Count)
+		{
 //вырежем из строки значение параметра, оставив только имя
-			  length = conf->Strings[i].Length();
-			  pos = conf->Strings[i].Pos("=");
+		  length = conf->Strings[i].Length();
+		  pos = conf->Strings[i].Pos("=");
 
-			  if (param_name == conf->Strings[i].SubString(0, length - (length - pos + 1)))
-				{
-				  param = conf->Strings[i].SubString(pos + 1, length - pos);
-				}
+		  if (param_name == conf->Strings[i].SubString(0, length - (length - pos + 1)))
+			param = conf->Strings[i].SubString(pos + 1, length - pos);
 
-			  i++;
-			}
+		  i++;
 		}
-      else
-        param = "!no_data!";
+	}
+  else
+	param = "!no_data!";
 
-    }
- __finally
-    {
-       delete conf;
-       conf = NULL;
-    }
-
-   return param;
+  return param;
 }
 //---------------------------------------------------------------------------
 
@@ -1471,40 +1381,32 @@ int GetConfigLineInd(String conf_file, String param)
   int length, pos;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
-  TStringList *conf = new TStringList();
+  auto conf = std::make_unique<TStringList>();
 
- try
-    {
-      conf->LoadFromFile(conf_file);
+  conf->LoadFromFile(conf_file);
 
-      if (conf->Count != 0)
-        {
+  if (conf->Count != 0)
+	{
 //если список не пуст, построчно сверим имена параметров с исходным
-          int i = 0;
+	  int i = 0;
      
-          while (i < conf->Count)
-             {
+	  while (i < conf->Count)
+		{
 //вырежем из строки значение параметра, оставив только имя        
-               length = conf->Strings[i].Length();
-               pos = conf->Strings[i].Pos("=");
+		  length = conf->Strings[i].Length();
+		  pos = conf->Strings[i].Pos("=");
 
-               conf->Strings[i] = conf->Strings[i].Delete(pos, length - pos);
+		  conf->Strings[i] = conf->Strings[i].Delete(pos, length - pos);
 
-               if (conf->Strings[i].Pos(param) != 0)
-                 {
-                   index = i;
-                   break;
-                 }
+		  if (conf->Strings[i].Pos(param) != 0)
+			{
+			  index = i;
+			  break;
+			}
             
-               i++;
-             }
-         }
-    }     
- __finally
-    {
-       delete conf;
-       conf = NULL;
-    }
+		  i++;
+		}
+	}
 
   return index;
 }
@@ -1512,41 +1414,33 @@ int GetConfigLineInd(String conf_file, String param)
 
 bool SetConfigLine(String conf_file, int index, String value)
 {
- bool done;
+  bool done;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
- TStringList *conf = new TStringList();
- 
- try
-    {
-      conf->LoadFromFile(conf_file);
+  auto conf = std::make_unique<TStringList>();
 
-      if (conf->Count != 0)
-        {
+  conf->LoadFromFile(conf_file);
+
+  if (conf->Count != 0)
+	{
 //если список не пустой и в нем есть строка с указанным индексом
-          if (conf->Count > index)
-            {
-              String str = conf->Strings[index];
-              int pos = str.Pos("=") + 1;
+	  if (conf->Count > index)
+		{
+		  String str = conf->Strings[index];
+		  int pos = str.Pos("=") + 1;
 //уберем старый параметр
-              str = str.Delete(pos, str.Length() - pos + 1);
+		  str = str.Delete(pos, str.Length() - pos + 1);
 //внесем новый
-              conf->Delete(index);
-              conf->Insert(index, str + value);
-              conf->SaveToFile(conf_file);
-              done = true;
-            }
-          else
-            done = false;
-        }
-      else
-        done = false;
-    }
- __finally
-    {
-       delete conf;
-       conf = NULL;
+		  conf->Delete(index);
+		  conf->Insert(index, str + value);
+		  conf->SaveToFile(conf_file);
+		  done = true;
+		}
+	  else
+		done = false;
 	}
+  else
+	done = false;
 
  return done;
 }
@@ -1569,24 +1463,20 @@ bool AddConfigLine(String conf_file, String param, String value)
 
   try
 	 {
-	   TStringStream *ms = new TStringStream("", TEncoding::UTF8, true);
+	   auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
 
-	   try
+	   ms->Position = 0;
+	   ms->LoadFromFile(conf_file);
+
+	   if (ms->Size > 0)
 		 {
-		   ms->Position = 0;
-		   ms->LoadFromFile(conf_file);
+		   ms->Position = ms->Size - sizeof(wchar_t);
 
-		   if (ms->Size > 0)
-			 {
-			   ms->Position = ms->Size - sizeof(wchar_t);
+		   String s = ms->ReadString(sizeof(wchar_t));
 
-			   String s = ms->ReadString(sizeof(wchar_t));
-
-			   if (s != "\r\n")
-				 add_endln = true;
-             }
+		   if (s != "\r\n")
+		     add_endln = true;
 		 }
-	   __finally {delete ms;}
 
 	   if (add_endln)
          AddToFile(conf_file, "\r\n");
@@ -1611,38 +1501,30 @@ bool RemConfigLine(String conf_file, String param)
   int index = -1;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
-  TStringList *conf = new TStringList();
+  auto conf = std::make_unique<TStringList>();
 
- try
-    {
-	  conf->LoadFromFile(conf_file);
+  conf->LoadFromFile(conf_file);
 
-      if (conf->Count != 0)
-		{
+  if (conf->Count != 0)
+	{
 //если список не пуст, узнаем индекс нужного параметра и удалим строку
-		  index = GetConfigLineInd(conf_file, param);
+	  index = GetConfigLineInd(conf_file, param);
 
-		  if (index > -1)
-			{
-			  try
-				 {
-				   conf->Delete(index);
-				   conf->SaveToFile(conf_file);
-				   result = true;
-				 }
-			  catch (Exception &e)
-				 {
-				   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-				   					   "RemConfigLine(): " + e.ToString());
-				   result = false;
-				 }
-			}
+	  if (index > -1)
+		{
+		  try
+			 {
+			   conf->Delete(index);
+			   conf->SaveToFile(conf_file);
+			   result = true;
+			 }
+		  catch (Exception &e)
+			 {
+			   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
+				   				   "RemConfigLine(): " + e.ToString());
+			   result = false;
+			 }
 		}
-    }
- __finally
-    {
-	  delete conf;
-      conf = NULL;
 	}
 
   return result;
@@ -2064,25 +1946,21 @@ bool IsTextIP(String text)
 
 bool ExtractHostPort(String conn_str, String &host, int &port)
 {
-  TStringList *recp = new TStringList();
+  auto recp = std::make_unique<TStringList>();
   bool result;
 
   try
 	 {
-	   try
-		  {
-			StrToList(recp, conn_str, ":");
-			host = recp->Strings[0];
-			port = recp->Strings[1].ToInt();
-			result = true;
-		  }
-	   catch (Exception &e)
-		  {
-			SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ExtractHostPort(): " + e.ToString());
-			result = false;
-		  }
+	   StrToList(recp.get(), conn_str, ":");
+	   host = recp->Strings[0];
+	   port = recp->Strings[1].ToInt();
+	   result = true;
 	 }
-  __finally {delete recp;}
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "ExtractHostPort(): " + e.ToString());
+	   result = false;
+	 }
 
   return result;
 }
@@ -2125,28 +2003,6 @@ bool IsCorrect (int val, String type, int criteria1, int criteria2)
    return success;   
 }
 
-//---------------------------------------------------------------------------
-
-/*загружает в имэйдж джпег-картинку из файла
-void LoadJPEGToImage(TImage *target, String file)
-{
-  if (FileExists(file))
-	{
-	  if (target == NULL)
-		ShowMessage("LoadJPEGToImage - !null pointer!");
-	  else
-		{
-		  TJPEGImage *new_image = new TJPEGImage();
-		  new_image->LoadFromFile(file);
-		  target->Picture->Assign(new_image);
-
-		  delete new_image;
-		  new_image = NULL;
-		}
-	}
-  else
-	ShowMessage("LoadJPEGToImage - !no_file!");
-};*/
 //---------------------------------------------------------------------------
 
 String ParseString(const String &main_str,
@@ -2313,12 +2169,12 @@ bool ShutdownProcessByExeName(const String &name)
 	   DWORD pid = GetProcessByExeName(name.c_str());
 
 	   if (!pid)
-		 throw new Exception("Process not found");
+		 throw Exception("Process not found");
 
 	   HANDLE proc = OpenProcess(PROCESS_TERMINATE, 0, pid);
 
 	   if (proc == INVALID_HANDLE_VALUE)
-		 throw new Exception("Can't take process handle");
+		 throw Exception("Can't take process handle");
 
 	   try
 		  {
@@ -2386,7 +2242,7 @@ bool CloseAppAndWait(DWORD app_pid, unsigned long timeout)
 		   HANDLE proc = OpenProcess(PROCESS_TERMINATE, 0, app_pid);
 
 		   if (proc == INVALID_HANDLE_VALUE)
-			 throw new Exception("Can't take process handle");
+			 throw Exception("Can't take process handle");
 
 		   try
 			  {
@@ -2556,14 +2412,17 @@ String LastErrorToString()
 String MD5(const String &text)
 {
   String res;
-
-  TIdHashMessageDigest5 *idmd5 = new TIdHashMessageDigest5();
+  auto idmd5 = std::make_unique<TIdHashMessageDigest5>();
 
   try
 	 {
 	   res = idmd5->HashStringAsHex(text);
 	 }
-  __finally {delete idmd5;}
+  catch (Exception &e)
+	 {
+	   res = "";
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "MD5(): " + e.ToString());
+	 }
 
   return res;
 }
