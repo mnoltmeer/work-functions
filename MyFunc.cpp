@@ -1727,7 +1727,7 @@ TDateTime GetFileDateTime(String file)
 	   FILETIME ft;
 	   SYSTEMTIME st;
 
-	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_READ);
+	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_SHARE_DENY_NONE);
 
 	   GetFileTime(hFile, NULL, NULL, &ft);
 	   FileTimeToSystemTime(&ft, &st);
@@ -1764,7 +1764,7 @@ int SetFileDateTime(String file, TDateTime set_date)
 	   FILETIME ft;
 	   SYSTEMTIME st;
 
-	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_READWRITE);
+	   HANDLE hFile = (HANDLE)OpenFile(AnsiString(file).c_str(), &of, OF_WRITE);
 
 	   if (hFile)
 		 {

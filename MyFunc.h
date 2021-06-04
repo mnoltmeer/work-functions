@@ -133,6 +133,10 @@ bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_al
 bool RemoveAppAutoStart(const String &key_name, bool for_all);
 bool CheckAppAutoStart(const String &key_name, bool for_all);
 
+//---------------------------------------------------------------------------
+//робочі та неактуальні, замість них краще використовувати клас TTCPRequester
+//LEGACY CODE :)
+//---------------------------------------------------------------------------
 TIdTCPClient *CreateSimpleTCPSender(const wchar_t *host, int port);
 void FreeSimpleTCPSender(TIdTCPClient *sender);
 //надсилає запит до хоста, якщо сталась помилка повертає 0
@@ -141,6 +145,8 @@ int AskFromHost(const wchar_t *host, int port, TStringStream *rw_bufer);
 //надсилає дані хосту, якщо сталась помилка повертає 0
 int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer);
 int SendToHost(const wchar_t *host, int port, const String &data);
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 //собирает информацию о файле, записывает в структуру
 //и возвращает ее
