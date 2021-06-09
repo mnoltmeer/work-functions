@@ -13,16 +13,21 @@ class TTCPRequester
 	TIdTCPClient *FSender;
 	String FHost;
 	unsigned int FPort;
-	bool FLogging; //вмикає кидання виключень
 	String FLastError;
 
 	void CreateSender();
 	void FreeSender();
-    void CheckSender();
+	void CheckSender();
+
+	String GetHost();
+	void SetHost(const String &host);
+
+	unsigned int GetPort();
+	void SetPort(unsigned int port);
 
   public:
-    TTCPRequester(const String &host, unsigned int port);
-	TTCPRequester(const String &host, unsigned int port, bool logging);
+	TTCPRequester();
+	TTCPRequester(const String &host, unsigned int port);
 	inline virtual ~TTCPRequester(){FreeSender();}
 
     inline String GetLastError(){return FLastError;}
@@ -33,5 +38,11 @@ class TTCPRequester
 //надсилає дані хосту, якщо сталась помилка повертає 0
 	int SendData(TMemoryStream *rw_buffer);
 	int SendString(const String &data);
+
+	bool Connect();
+	bool Disconnect();
+
+	__property String Host = {read = GetHost, write = SetHost};
+    __property unsigned int Port = {read = GetPort, write = SetPort};
 };
 #endif

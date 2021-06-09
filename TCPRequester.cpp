@@ -7,37 +7,22 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 
+TTCPRequester::TTCPRequester()
+{
+  FHost = "127.0.0.1";
+  FPort = 0;
+
+  CreateSender();
+}
+//---------------------------------------------------------------------------
+
 TTCPRequester::TTCPRequester(const String &host, unsigned int port)
 {
   FHost = host;
   FPort = port;
-  FLogging = false;
 
-  try
-	 {
-	   CreateSender();
-	 }
-  catch (Exception &e)
-	 {
-	   FLastError = e.ToString();
-	 }
-}
-//---------------------------------------------------------------------------
-
-TTCPRequester::TTCPRequester(const String &host, unsigned int port, bool logging)
-{
-  FHost = host;
-  FPort = port;
-  FLogging = logging;
-
-  try
-	 {
-	   CreateSender();
-	 }
-  catch (Exception &e)
-	 {
-	   FLastError = e.ToString();
-	 }
+  CreateSender();
+  Connect();
 }
 //---------------------------------------------------------------------------
 
@@ -55,37 +40,113 @@ void TTCPRequester::CreateSender()
 	   FSender->IPVersion = Id_IPv4;
 	   FSender->ConnectTimeout = 1500;
 	   FSender->ReadTimeout = 5000;
-
-	   FSender->Connect();
 	 }
   catch (Exception &e)
 	 {
 	   FLastError = "Error creating Sender " + e.ToString();
-
-	   if (FLogging) throw Exception("TTCPRequester: " + FLastError);
 	 }
 }
 //---------------------------------------------------------------------------
 
 void TTCPRequester::FreeSender()
 {
-  if (FSender->Connected())
+  if (FSender)
 	{
-	  FSender->Disconnect();
-	  FSender->Socket->Close();
-	}
+	  if (FSender->Connected())
+		{
+		  FSender->Disconnect();
+		  FSender->Socket->Close();
+		}
 
-  if (FSender) delete FSender;
+	  delete FSender;
+	}
+}
+//---------------------------------------------------------------------------
+
+String TTCPRequester::GetHost()
+{
+  if (FSender)
+	return FSender->Host;
+  else
+	return "";
+}
+//---------------------------------------------------------------------------
+
+void TTCPRequester::SetHost(const String &host)
+{
+  if (FSender)
+	FSender->Host = host;
+}
+//---------------------------------------------------------------------------
+
+unsigned int TTCPRequester::GetPort()
+{
+  if (FSender)
+	return FSender->Port;
+  else
+	return 0;
+}
+//---------------------------------------------------------------------------
+
+void TTCPRequester::SetPort(unsigned int port)
+{
+  if (FSender)
+	FSender->Port = port;
 }
 //---------------------------------------------------------------------------
 
 void TTCPRequester::CheckSender()
 {
-  if (!FSender)
-	throw Exception("Sender not inilialised");
+  try
+	 {
+	   if (!FSender)
+		 throw Exception("Sender not inilialised");
 
-  if (!FSender->Connected())
-    throw Exception("Sender not connected");
+	   if (!FSender->Connected())
+		 throw Exception("Sender not connected");
+	 }
+  catch (Exception &e)
+	 {
+	   throw e;
+	 }
+}
+//---------------------------------------------------------------------------
+
+bool TTCPRequester::Connect()
+{
+  bool res;
+
+  try
+	 {
+	   FSender->Connect();
+	   res = true;
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = "Connect: " + e.ToString();
+       res = false;
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+bool TTCPRequester::Disconnect()
+{
+  bool res;
+
+  try
+	 {
+	   FSender->Disconnect();
+	   res = true;
+	 }
+  catch (Exception &e)
+	 {
+	   FLastError = "Disconnect: " + e.ToString();
+       res = false;
+	 }
+
+  return res;
 }
 //---------------------------------------------------------------------------
 
@@ -95,7 +156,7 @@ int TTCPRequester::AskData(TMemoryStream *rw_buffer)
 
   try
 	 {
-       CheckSender();
+	   CheckSender();
 
 	   if (!rw_buffer)
 		 throw Exception("Invalid buffer pointer");
@@ -107,8 +168,6 @@ int TTCPRequester::AskData(TMemoryStream *rw_buffer)
 	 {
 	   res = 0;
 	   FLastError = "Error sending data " + e.ToString();
-
-	   if (FLogging) throw Exception("TTCPRequester: " + FLastError);
 	 }
 
   try
@@ -122,8 +181,6 @@ int TTCPRequester::AskData(TMemoryStream *rw_buffer)
 	 {
 	   res = 0;
 	   FLastError = "Error receiving data " + e.ToString();
-
-	   if (FLogging) throw Exception("TTCPRequester: " + FLastError);
 	 }
 
   rw_buffer->Position = 0;
@@ -150,8 +207,6 @@ int TTCPRequester::SendData(TMemoryStream *rw_buffer)
 	 {
 	   res = 0;
 	   FLastError = "Error sending data " + e.ToString();
-
-	   if (FLogging) throw Exception("TTCPRequester: " + FLastError);
 	 }
 
   return res;
@@ -173,9 +228,7 @@ int TTCPRequester::SendString(const String &data)
   catch (Exception &e)
 	 {
 	   res = 0;
-       FLastError = "TTCPRequester: Error sending data " + e.ToString();
-
-	   if (FLogging) throw Exception(FLastError);
+	   FLastError = "TTCPRequester: Error sending data " + e.ToString();
 	 }
 
   return res;
