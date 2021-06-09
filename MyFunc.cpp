@@ -1229,6 +1229,21 @@ void StrToList(TStringList *list, String text, String delim)
   try
 	 {
 	   list->Clear();
+
+       //если разделитель не встречается, занесем оставшийся текст в list
+	   if (text.Pos(delim) == 0)
+		 {
+		   if (text != "")
+			 {
+			   if ((text != "\n") && (text != "\r\n"))
+				 {
+				   list->Add(text);
+
+				   return;
+				 }
+			 }
+         }
+
 //будем обрабатывать исходную строку пока будет встречаться символ-разделитель
 	   while (text.Pos(delim) != 0)
 		 {
@@ -1241,13 +1256,6 @@ void StrToList(TStringList *list, String text, String delim)
 		   if ((str != NULL) || (str != ""))
 		     list->Add(str);
 		 }
-//если разделитель не встречается, занесем оставшийся текст в list
-	   if (text.Pos(delim) == 0)
-		 if (text != "")
-		   {
-			 if ((text != "\n") && (text != "\r\n"))
-			   list->Add(text);
-	  		}
 	 }
   catch (Exception &e)
 	 {
