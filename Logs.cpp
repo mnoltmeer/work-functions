@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-
+#include <memory>
 #pragma hdrstop
 
 #include "Logs.h"
@@ -8,14 +8,10 @@
 //сохраняет текст в файл
 void SaveToFile(String file, String text)
 {
-  TStringStream *ms = new TStringStream(text, TEncoding::UTF8, true);
+  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
 
-  try
-	 {
-	   ms->Position = 0;
-	   ms->SaveToFile(file);
-	 }
-  __finally {delete ms;}
+  ms->Position = 0;
+  ms->SaveToFile(file);
 }
 //---------------------------------------------------------------------------
 
@@ -25,16 +21,12 @@ void AddToFile(String file, String text)
 	SaveToFile(file, text);
   else
 	{
-	  TFileStream *srv_file = new TFileStream(file, fmOpenWrite);
-	  TStringStream *ms = new TStringStream(text, TEncoding::UTF8, true);
+	  std::unique_ptr<TFileStream> srv_file(new TFileStream(file, fmOpenWrite));
+	  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
 
-	  try
-		 {
-		   ms->Position = 0;
-		   srv_file->Position = srv_file->Size;
-		   srv_file->CopyFrom(ms, ms->Size);
-		 }
-	  __finally {delete srv_file; delete ms;}
+	  ms->Position = 0;
+	  srv_file->Position = srv_file->Size;
+	  srv_file->CopyFrom(ms, ms->Size);
 	}
 }
 //---------------------------------------------------------------------------

@@ -190,7 +190,8 @@ bool TRecpientItemCollection::LoadFromFile(String file)
   if (!FileExists(file))
 	return false;
 
-  auto fs = std::make_unique<TFileStream>(file, fmOpenRead);
+  std::unique_ptr<TFileStream> fs(new TFileStream(file, fmOpenRead));
+  //auto fs = std::make_unique<TFileStream>(file, fmOpenRead);
   RecipientItem itm;
   int text_len;
   wchar_t smb;
@@ -206,7 +207,8 @@ bool TRecpientItemCollection::LoadFromFile(String file)
 	  if (text_len > 0)
 		{
 		  int l = 0;
-		  auto str = std::make_unique<wchar_t[]>(text_len + 1);
+		  std::unique_ptr<wchar_t[]> str(new wchar_t[text_len + 1]);
+		  //auto str = std::make_unique<wchar_t[]>(text_len + 1);
 
 		  for (int i = 0; i < text_len; i++)
 			{
@@ -222,7 +224,8 @@ bool TRecpientItemCollection::LoadFromFile(String file)
 	  if (text_len > 0)
 		{
 		  int l = 0;
-		  auto str = std::make_unique<wchar_t[]>(text_len + 1);
+		  std::unique_ptr<wchar_t[]> str(new wchar_t[text_len + 1]);
+		  //auto str = std::make_unique<wchar_t[]>(text_len + 1);
 
 		  for (int i = 0; i < text_len; i++)
 			{
@@ -238,7 +241,8 @@ bool TRecpientItemCollection::LoadFromFile(String file)
 	  if (text_len > 0)
 		{
 		  int l = 0;
-		  auto str = std::make_unique<wchar_t[]>(text_len + 1);
+		  std::unique_ptr<wchar_t[]> str(new wchar_t[text_len + 1]);
+		  //auto str = std::make_unique<wchar_t[]>(text_len + 1);
 
 		  for (int i = 0; i < text_len; i++)
 			{
@@ -267,7 +271,8 @@ bool TRecpientItemCollection::ImportData(TRecpientItemCollection *source)
 	  try
 		 {
 		   std::vector<int> id;
-		   auto grps = std::make_unique<TStringList>();
+		   std::unique_ptr<TStringList> grps(new TStringList());
+		   //auto grps = std::make_unique<TStringList>();
 
 		   source->SelectGroups(grps.get()); //вибираємо список груп з імпорт. книги
 		   RecipientItem itm;
@@ -332,7 +337,8 @@ bool TRecpientItemCollection::Save()
 
 bool TRecpientItemCollection::SaveToFile(String file)
 {
-  auto fs = std::make_unique<TFileStream>(file, fmOpenWrite|fmCreate);
+  std::unique_ptr<TFileStream> fs(new TFileStream(file, fmOpenWrite|fmCreate));
+  //auto fs = std::make_unique<TFileStream>(file, fmOpenWrite|fmCreate);
   fs->Position = 0;
   int text_len = 0;
   wchar_t smb;

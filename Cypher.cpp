@@ -19,6 +19,7 @@ Copyright 2021 Maxim Noltmeer m.noltmeer@gmail.com
 #include <wincrypt.h>
 #include <bcrypt.h>
 #include <strsafe.h>
+#include <memory>
 
 #pragma hdrstop
 
@@ -68,14 +69,10 @@ TMemoryStream *TSAESCypher::Crypt(TMemoryStream *data, const char *pass)
 {
   try
 	 {
-	   TAESCypher *cypher = new TAESCypher(data, pass, coCrypt);
+	   std::unique_ptr<TAESCypher> cypher(new TAESCypher(data, pass, coCrypt));
 
-	   try
-		  {
-			data->LoadFromStream(cypher->Data);
-			data->Position = 0;
-		  }
-	   __finally {delete cypher;}
+	   data->LoadFromStream(cypher->Data);
+	   data->Position = 0;
 	 }
   catch (Exception &e)
 	 {
@@ -90,14 +87,10 @@ TMemoryStream *TSAESCypher::Encrypt(TMemoryStream *data, const char *pass)
 {
   try
 	 {
-	   TAESCypher *cypher = new TAESCypher(data, pass, coEncrypt);
+	   std::unique_ptr<TAESCypher> cypher(new TAESCypher(data, pass, coEncrypt));
 
-	   try
-		  {
-			data->LoadFromStream(cypher->Data);
-            data->Position = 0;
-		  }
-	   __finally {delete cypher;}
+	   data->LoadFromStream(cypher->Data);
+	   data->Position = 0;
 	 }
   catch (Exception &e)
 	 {
@@ -164,16 +157,16 @@ bool TAESCypher::LoadCryptSystem(const char *pass)
   try
 	 {
 	   if (!CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, 0))
-		 throw new Exception("LoadCryptSystem:CryptAcquireContext error " + LastErrorToString());
+		 throw Exception("LoadCryptSystem:CryptAcquireContext error " + LastErrorToString());
 
 	   if (!CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash))
-		 throw new Exception("LoadCryptSystem:CryptCreateHash error " + LastErrorToString());
+		 throw Exception("LoadCryptSystem:CryptCreateHash error " + LastErrorToString());
 
 	   if (!CryptHashData(hHash, (BYTE*)pass, strlen(pass), 0))
-		 throw new Exception("LoadCryptSystem:CryptHashData error " + LastErrorToString());
+		 throw Exception("LoadCryptSystem:CryptHashData error " + LastErrorToString());
 
 	   if (!CryptDeriveKey(hProv, CALG_AES_192, hHash, CRYPT_EXPORTABLE, &hKey))
-		 throw new Exception("LoadCryptSystem:CryptDeriveKey error " + LastErrorToString());
+		 throw Exception("LoadCryptSystem:CryptDeriveKey error " + LastErrorToString());
 	 }
   catch (Exception &e)
 	 {
@@ -198,7 +191,7 @@ void TAESCypher::DataCrypt(TMemoryStream *ms, const char *password, CypherOperat
   try
 	 {
 	   if (!LoadCryptSystem(password))
-		 throw new Exception("Initialising CryptSystem failed");
+		 throw Exception("Initialising CryptSystem failed");
 
 	   try
 		  {
@@ -211,19 +204,19 @@ void TAESCypher::DataCrypt(TMemoryStream *ms, const char *password, CypherOperat
 			if (operation == coCrypt)
 			  {
 				if (!CryptEncrypt(hKey, NULL, true, NULL, reinterpret_cast<BYTE*>(data.data()), &size, data.size()))
-				  throw new Exception("Crypting error: " + LastErrorToString());
+				  throw Exception("Crypting error: " + LastErrorToString());
 				else
 				  ms->Write(data.data(), size);
 			  }
 			else if (operation == coEncrypt)
 			  {
 				if (!CryptDecrypt(hKey, NULL, true, NULL, reinterpret_cast<BYTE*>(data.data()), &size))
-				  throw new Exception("Encrypting error: " + LastErrorToString());
+				  throw Exception("Encrypting error: " + LastErrorToString());
 				else
 				  ms->Write(data.data(), size);
 			  }
 			else
-			  throw new Exception("Crypting error, unknown operation type");
+			  throw Exception("Crypting error, unknown operation type");
 
 			ms->Position = 0;
 		  }
@@ -241,7 +234,7 @@ void TAESCypher::CryptFile(const String &file)
   try
 	 {
 	   if (!FPass)
-		 throw new Exception("Crypt password ont defined!");
+		 throw Exception("Crypt password ont defined!");
 
 	   FData->LoadFromFile(file);
 	   DataCrypt(FData, FPass, coCrypt);
@@ -258,7 +251,7 @@ void TAESCypher::EncryptFile(const String &file)
   try
 	 {
        if (!FPass)
-		 throw new Exception("Crypt password ont defined!");
+		 throw Exception("Crypt password ont defined!");
 
 	   FData->LoadFromFile(file);
 	   DataCrypt(FData, FPass, coEncrypt);
@@ -276,14 +269,10 @@ String TAESCypher::DataToString()
 
   try
 	 {
-       wchar_t *buf = new wchar_t[Data->Size];
+	   std::unique_ptr<wchar_t[]> buf(new wchar_t[Data->Size]);
 
-	   try
-		  {
-			Data->Read(buf, Data->Size);
-			res = buf;
-		  }
-	   __finally {delete[] buf;}
+	   Data->Read(buf, Data->Size);
+	   res = buf;
 	 }
   catch (Exception &e)
 	 {

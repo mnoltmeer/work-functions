@@ -36,7 +36,8 @@ String UsedAppLogDir;
 //---------------------------------------------------------------------------
 void CPTransOut(UINT mode, const char *in_str, UINT str_len)
 {
-  auto out_str = std::make_unique<char[]>(str_len);
+  std::unique_ptr<char[]> out_str(new char[str_len]);
+  //auto out_str = std::make_unique<char[]>(str_len);
 
   switch (mode)
      {
@@ -374,7 +375,8 @@ int SendToHost(const wchar_t *host, int port, TStringStream *rw_bufer)
 int SendToHost(const wchar_t *host, int port, const String &data)
 {
   std::unique_ptr<TIdTCPClient> sender(CreateSimpleTCPSender(host, port));
-  auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
+  std::unique_ptr<TStringStream> ms(new TStringStream("", TEncoding::UTF8, true));
+  //auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
   int res = 1;
 
   try
@@ -404,7 +406,8 @@ String LoadTextFile(String filepath)
   if (FileExists(filepath))
 	{
 //открываем файл
-	  auto srv_file = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
+	  std::unique_ptr<TStringStream> srv_file(new TStringStream("", TEncoding::UTF8, true));
+	  //auto srv_file = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
 
 	  srv_file->LoadFromFile(filepath);
 	  srv_file->Position = 0;
@@ -429,7 +432,8 @@ String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size)
 
   try
 	 {
-	   auto str = std::make_unique<wchar_t[]>(read_size + 1);
+	   std::unique_ptr<wchar_t[]> str(new wchar_t[read_size + 1]);
+	   //auto str = std::make_unique<wchar_t[]>(read_size + 1);
 
 	   if (pos >= 0)
 		 stream->Position = pos;
@@ -493,7 +497,8 @@ void WriteStringIntoBinaryStream(TStream *stream, String str)
 bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_all)
 {
   bool result;
-  auto reg = std::make_unique<TRegistry>();
+  std::unique_ptr<TRegistry> reg(new TRegistry());
+  //auto reg = std::make_unique<TRegistry>();
 
   if (for_all)
 	reg->RootKey = HKEY_LOCAL_MACHINE;
@@ -532,7 +537,8 @@ bool AddAppAutoStart(const String &key_name, const String &app_path, bool for_al
 bool RemoveAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
-  auto reg = std::make_unique<TRegistry>();
+  std::unique_ptr<TRegistry> reg(new TRegistry());
+  //auto reg = std::make_unique<TRegistry>();
 
   if (for_all)
 	reg->RootKey = HKEY_LOCAL_MACHINE;
@@ -559,7 +565,8 @@ bool RemoveAppAutoStart(const String &key_name, bool for_all)
 bool CheckAppAutoStart(const String &key_name, bool for_all)
 {
   bool result;
-  auto reg = std::make_unique<TRegistry>(KEY_READ);
+  std::unique_ptr<TRegistry> reg(new TRegistry(KEY_READ));
+  //auto reg = std::make_unique<TRegistry>(KEY_READ);
 
   if (for_all)
 	reg->RootKey = HKEY_LOCAL_MACHINE;
@@ -613,7 +620,8 @@ int LoadFile(String filepath, void *buf)
 //сохраняет текст в файл
 void SaveToFile(String file, String text)
 {
-  auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
+  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
+  //auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
 
   try
 	 {
@@ -633,8 +641,10 @@ void AddToFile(String file, String text)
 	SaveToFile(file, text);
   else
 	{
-	  auto srv_file = std::make_unique<TFileStream>(file, fmOpenWrite);
-	  auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
+	  std::unique_ptr<TFileStream> srv_file(new TFileStream(file, fmOpenWrite));
+	  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
+	  //auto srv_file = std::make_unique<TFileStream>(file, fmOpenWrite);
+	  //auto ms = std::make_unique<TStringStream>(text, TEncoding::UTF8, true);
 
 	  try
 		 {
@@ -728,7 +738,8 @@ int GetFileCountRegEx(String search_dir, String reg_exp)
 
 int GetFileCountSubDirs(String search_dir, String mask)
 {
-  auto DirList = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> DirList(new TStringList());
+  //auto DirList = std::make_unique<TStringList>();
   String src_name;
   int FileCount = 0;
 
@@ -754,7 +765,8 @@ int GetFileCountSubDirs(String search_dir, String mask)
 
 int GetFileCountSubDirsRegEx(String search_dir, String reg_exp)
 {
-  auto DirList = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> DirList(new TStringList());
+  //auto DirList = std::make_unique<TStringList>();
   String src_name;
   int FileCount = 0;
 
@@ -882,7 +894,8 @@ unsigned long GetFileSize(String filepath)
   if (!FileExists(filepath))
 	return -1;
 
-  auto fs = std::make_unique<TFileStream>(filepath, fmOpenRead|fmShareDenyNone);
+  std::unique_ptr<TFileStream> fs(new TFileStream(filepath, fmOpenRead|fmShareDenyNone));
+  //auto fs = std::make_unique<TFileStream>(filepath, fmOpenRead|fmShareDenyNone);
 
   try
 	 {
@@ -1017,7 +1030,8 @@ String GetFileExtensionFromFileName(const String &file)
 String GetPCName()
 {
   unsigned long sz = MAX_COMPUTERNAME_LENGTH + 1;
-  auto buff = std::make_unique<wchar_t[]>(sz);
+  std::unique_ptr<wchar_t[]> buff(new wchar_t[sz]);
+  //auto buff = std::make_unique<wchar_t[]>(sz);
 
   GetComputerName(buff.get(), &sz);
 
@@ -1197,7 +1211,8 @@ void DeleteFilesExceptList(String dir, TStringList *names_list)
   bool in_list;
   String local_name, remote_name;
 
-  auto local_files = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> local_files(new TStringList());
+  //auto local_files = std::make_unique<TStringList>();
 
   GetFileList(local_files.get(), dir, "*", WITHOUT_DIRS, WITHOUT_FULL_PATH);
 
@@ -1272,7 +1287,8 @@ void StrToList(TStringList *list, String text)
 
 void StrToList(std::vector<String> *list, String text, String delim)
 {
-  auto tmp = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> tmp(new TStringList());
+  //auto tmp = std::make_unique<TStringList>();
 
   StrToList(tmp.get(), text, delim);
   list->clear();
@@ -1321,7 +1337,8 @@ String GetConfigLine(String conf_file, int index)
 	}
     
 //создадим лист и загрузим в него содержимое конфиг-файла
-  auto conf = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> conf(new TStringList());
+  //auto conf = std::make_unique<TStringList>();
 
   conf->LoadFromFile(conf_file);
 
@@ -1347,7 +1364,8 @@ String GetConfigLine(String conf_file, String param_name)
 {
   int length, pos = 0;
   String param = "^no_line";
-  auto conf = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> conf(new TStringList());
+  //auto conf = std::make_unique<TStringList>();
 
   conf->LoadFromFile(conf_file);
 
@@ -1382,7 +1400,8 @@ int GetConfigLineInd(String conf_file, String param)
   int length, pos;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
-  auto conf = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> conf(new TStringList());
+  //auto conf = std::make_unique<TStringList>();
 
   conf->LoadFromFile(conf_file);
 
@@ -1418,7 +1437,8 @@ bool SetConfigLine(String conf_file, int index, String value)
   bool done;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
-  auto conf = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> conf(new TStringList());
+  //auto conf = std::make_unique<TStringList>();
 
   conf->LoadFromFile(conf_file);
 
@@ -1464,7 +1484,8 @@ bool AddConfigLine(String conf_file, String param, String value)
 
   try
 	 {
-	   auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
+	   std::unique_ptr<TStringStream> ms(new TStringStream("", TEncoding::UTF8, true));
+	   //auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
 
 	   ms->Position = 0;
 	   ms->LoadFromFile(conf_file);
@@ -1502,7 +1523,8 @@ bool RemConfigLine(String conf_file, String param)
   int index = -1;
 
 //создадим лист и загрузим в него содержимое конфиг-файла
-  auto conf = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> conf(new TStringList());
+  //auto conf = std::make_unique<TStringList>();
 
   conf->LoadFromFile(conf_file);
 
@@ -1947,7 +1969,8 @@ bool IsTextIP(String text)
 
 bool ExtractHostPort(String conn_str, String &host, int &port)
 {
-  auto recp = std::make_unique<TStringList>();
+  std::unique_ptr<TStringList> recp(new TStringList());
+  //auto recp = std::make_unique<TStringList>();
   bool result;
 
   try
@@ -2413,7 +2436,8 @@ String LastErrorToString()
 String MD5(const String &text)
 {
   String res;
-  auto idmd5 = std::make_unique<TIdHashMessageDigest5>();
+  std::unique_ptr<TIdHashMessageDigest5> idmd5(new TIdHashMessageDigest5());
+  //auto idmd5 = std::make_unique<TIdHashMessageDigest5>();
 
   try
 	 {
