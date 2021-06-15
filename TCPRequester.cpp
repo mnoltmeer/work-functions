@@ -215,7 +215,7 @@ int TTCPRequester::SendData(TMemoryStream *rw_buffer)
 
 int TTCPRequester::SendString(const String &data)
 {
-  std::unique_ptr<TStringStream> ms(new TStringStream("", TEncoding::UTF8, true));
+  std::unique_ptr<TStringStream> ms(new TStringStream(data, TEncoding::UTF8, true));
   //auto ms = std::make_unique<TStringStream>("", TEncoding::UTF8, true);
   int res = 1;
 
