@@ -271,8 +271,8 @@ String TAESCypher::DataToString()
 	 {
 	   std::unique_ptr<wchar_t[]> buf(new wchar_t[Data->Size]);
 
-	   Data->Read(buf, Data->Size);
-	   res = buf;
+	   Data->Read(buf.get(), Data->Size);
+	   res = buf.get();
 	 }
   catch (Exception &e)
 	 {
