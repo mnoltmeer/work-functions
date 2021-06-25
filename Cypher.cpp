@@ -157,7 +157,15 @@ bool TAESCypher::LoadCryptSystem(const char *pass)
   try
 	 {
 	   if (!CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, 0))
-		 throw Exception("LoadCryptSystem:CryptAcquireContext error " + LastErrorToString());
+		 {
+		   if (GetLastError() == NTE_BAD_KEYSET)
+			 {
+			   if (!CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_NEWKEYSET))
+				 throw Exception("LoadCryptSystem:CryptAcquireContext error " + LastErrorToString());
+			 }
+		   else
+             throw Exception("LoadCryptSystem:CryptAcquireContext error " + LastErrorToString());
+		 }
 
 	   if (!CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash))
 		 throw Exception("LoadCryptSystem:CryptCreateHash error " + LastErrorToString());

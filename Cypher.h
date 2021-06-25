@@ -30,7 +30,7 @@ private:
 	char *FPass;
 	TMemoryStream *FData; //буфер у якому зберігаються дані (при шифровці та дешифровці)
 	String FLastError;
-    HCRYPTPROV hProv; //дескриптор криптопровайдера
+	HCRYPTPROV hProv; //дескриптор криптопровайдера
 	HCRYPTKEY hKey; //дескриптор ключа, созданного из хэш-кода
 	HCRYPTHASH hHash; //дескриптор хэш-объекта
     bool LoadCryptSystem(const char *pass);
@@ -53,7 +53,7 @@ public:
 	void EncryptFile(const String &file);
 
 	__property TMemoryStream *Data = {read = FData};
-    __property String LastError = {read = FLastError};
+	__property String LastError = {read = FLastError};
 };
 
 
