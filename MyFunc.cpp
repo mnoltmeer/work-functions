@@ -2452,3 +2452,45 @@ String MD5(const String &text)
   return res;
 }
 //---------------------------------------------------------------------------
+
+bool AddRuntimeFont(const String &font_file)
+{
+  bool res;
+
+  try
+	 {
+	   res = AddFontResourceEx(font_file.c_str(), FR_PRIVATE, NULL);
+
+	   if (res)
+		 SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "AddRuntimeFont(): " + e.ToString());
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+bool RemoveRuntimeFont(const String &font_file)
+{
+  bool res;
+
+  try
+	 {
+	   res = RemoveFontResourceEx(font_file.c_str(), FR_PRIVATE, NULL);
+
+	   if (res)
+		 SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+	 }
+  catch (Exception &e)
+	 {
+	   res = false;
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "RemoveRuntimeFont(): " + e.ToString());
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------

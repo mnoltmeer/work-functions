@@ -407,6 +407,9 @@ void ErrorExit(LPTSTR lpszFunction);
 //то же, но вывод в String
 String LastErrorToString();
 
+bool AddRuntimeFont(const String &font_file);
+bool RemoveRuntimeFont(const String &font_file);
+
 //---------------------------------------------------------------------------
 //import from somefunc.h
 //LEGACY CODE :)
