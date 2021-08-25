@@ -2494,3 +2494,82 @@ bool RemoveRuntimeFont(const String &font_file)
   return res;
 }
 //---------------------------------------------------------------------------
+
+HANDLE SpawnAndRedirect(LPCTSTR commandLine, HANDLE *hStdOutputReadPipe, LPCTSTR lpCurrentDirectory)
+{
+  HANDLE hStdOutputWritePipe, hStdOutput, hStdError;
+  CreatePipe(hStdOutputReadPipe, &hStdOutputWritePipe, NULL, 0);
+  DuplicateHandle(GetCurrentProcess(), hStdOutputWritePipe,GetCurrentProcess(), &hStdOutput,0, TRUE, DUPLICATE_SAME_ACCESS);
+  DuplicateHandle(GetCurrentProcess(), hStdOutput, GetCurrentProcess(), &hStdError, 0, TRUE, DUPLICATE_SAME_ACCESS);
+  CloseHandle(hStdOutputWritePipe);
+  PROCESS_INFORMATION pi;
+  STARTUPINFO si;
+
+  ZeroMemory(&si, sizeof(STARTUPINFO));
+
+  si.cb = sizeof(STARTUPINFO);
+  si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+  si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = hStdOutput;
+  si.hStdError  = hStdError;
+  si.wShowWindow = SW_HIDE;
+
+  wchar_t commandLineCopy[1024];
+
+  wcscpy(commandLineCopy, commandLine);
+
+  if (!CreateProcess(NULL, commandLineCopy, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, lpCurrentDirectory, &si, &pi))
+	{
+      CloseHandle(hStdOutput);
+      CloseHandle(hStdError);
+      CloseHandle(*hStdOutputReadPipe);
+      *hStdOutputReadPipe = INVALID_HANDLE_VALUE;
+      return NULL;
+	}
+
+  CloseHandle(pi.hThread);
+  CloseHandle(hStdOutput);
+  CloseHandle(hStdError);
+
+  return pi.hProcess;
+}
+//---------------------------------------------------------------------------
+
+String GetConsoleInfo(LPCTSTR commandLine)
+{
+  HANDLE hOutput, hProcess;
+  String res;
+
+  try
+	 {
+	   hProcess = SpawnAndRedirect(commandLine, &hOutput, NULL);
+
+	   if (!hProcess)
+		 return "";
+
+	   CHAR buffer[128];
+	   CHAR out[131072] = "";
+	   DWORD read;
+
+	   while (ReadFile(hOutput, buffer, 128, &read, NULL))
+		 {
+		   buffer[read] = '\0';
+		   lstrcatA(out, buffer);
+		 }
+
+	   CHAR msg[131072] = "";
+
+	   OemToCharA(out, msg);
+	   res = String(msg);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetConsoleInfo(): " + e.ToString());
+	 }
+
+  CloseHandle(hOutput);
+  CloseHandle(hProcess);
+
+  return res;
+}
+//---------------------------------------------------------------------------

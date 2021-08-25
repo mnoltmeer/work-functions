@@ -410,6 +410,16 @@ String LastErrorToString();
 bool AddRuntimeFont(const String &font_file);
 bool RemoveRuntimeFont(const String &font_file);
 
+/*
+перехоплює поток вводу/виводу з іншого консольного вікна
+передає йому ввод та повертає текст виводу
+взято з https://www.cyberforum.ru/post2525466.html
+*/
+HANDLE SpawnAndRedirect(LPCTSTR commandLine,
+						HANDLE *hStdOutputReadPipe,
+						LPCTSTR lpCurrentDirectory);
+String GetConsoleInfo(LPCTSTR commandLine);
+
 //---------------------------------------------------------------------------
 //import from somefunc.h
 //LEGACY CODE :)
