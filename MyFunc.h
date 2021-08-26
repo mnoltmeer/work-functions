@@ -410,6 +410,8 @@ String LastErrorToString();
 bool AddRuntimeFont(const String &font_file);
 bool RemoveRuntimeFont(const String &font_file);
 
+const wchar_t *GetOsVersionName();
+
 /*
 перехоплює поток вводу/виводу з іншого консольного вікна
 передає йому ввод та повертає текст виводу

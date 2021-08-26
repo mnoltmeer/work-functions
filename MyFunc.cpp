@@ -22,6 +22,7 @@ This program is free software: you can redistribute it and/or modify
 #include <shellapi.h>
 #include <strsafe.h>
 #include <memory>
+#include <VersionHelpers.h>
 #pragma hdrstop
 
 #include "MyFunc.h"
@@ -2571,5 +2572,29 @@ String GetConsoleInfo(LPCTSTR commandLine)
   CloseHandle(hProcess);
 
   return res;
+}
+//---------------------------------------------------------------------------
+
+const wchar_t *GetOsVersionName()
+{
+  if (IsWindows10OrGreater())
+	return L"10";
+
+  if (IsWindows8Point1OrGreater())
+	return L"8.1";
+
+  if (IsWindows8OrGreater())
+	return L"8";
+
+  if (IsWindows7OrGreater())
+	return L"7";
+
+  if (IsWindowsVistaOrGreater())
+	return L"Vista";
+
+  if (IsWindowsXPOrGreater())
+	return L"XP";
+
+  return L"Unknown";
 }
 //---------------------------------------------------------------------------
