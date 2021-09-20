@@ -107,6 +107,7 @@ TAESCypher::TAESCypher(TMemoryStream *data, const char *password, CypherOperatio
 {
   try
 	 {
+	   FPass = nullptr;
 	   FData = new TMemoryStream();
 	   FData->LoadFromStream(data);
 	   DataCrypt(FData, password, operation);
@@ -123,6 +124,7 @@ TAESCypher::TAESCypher(const String &data, const char *password)
 {
   try
 	 {
+       FPass = nullptr;
 	   FData = new TMemoryStream();
 	   FData->Write(data.c_str(), data.Length() * sizeof(wchar_t));
 	   DataCrypt(FData, password, coCrypt);
