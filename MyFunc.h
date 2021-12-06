@@ -420,7 +420,8 @@ const wchar_t *GetOsVersionName();
 HANDLE SpawnAndRedirect(LPCTSTR commandLine,
 						HANDLE *hStdOutputReadPipe,
 						LPCTSTR lpCurrentDirectory);
-String GetConsoleInfo(LPCTSTR commandLine);
+String GetRawConsoleInfo(LPCTSTR commandLine);
+String GetConsoleInfo(const String &cmd);
 
 //---------------------------------------------------------------------------
 //import from somefunc.h

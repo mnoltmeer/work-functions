@@ -630,9 +630,9 @@ void SaveToFile(String file, String text)
 	   ms->SaveToFile(file);
 	 }
   catch(Exception &e)
-	{
-	  SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "SaveToFile(): " + e.ToString());
-	}
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "SaveToFile(): " + e.ToString());
+	 }
 }
 //---------------------------------------------------------------------------
 
@@ -667,9 +667,7 @@ int SaveVectorToFile(std::vector <String> *vecStr, String path)
   try
      {
 	   for (UINT i = 0; i < vecStr->size(); i++)
-		  {
-			AddToFile(path, vecStr->at(i));
-		  }
+		  AddToFile(path, vecStr->at(i));
      }
   catch(Exception &e)
      {
@@ -1113,8 +1111,7 @@ int CopyAll(String fr_path, String to_path, TStringList *log)
 		  else
 			{
 			  if (log)
-				log->Add(fr_path + '\\' + fp.Name + " -> " +
-						 to_path + '\\' + fp.Name);
+				log->Add(fr_path + '\\' + fp.Name + " -> " + to_path + '\\' + fp.Name);
 
 			  try
 				 {
@@ -1172,13 +1169,9 @@ void DeleteAllFromDir(String destin)
 		   if ((rec.Name != ".") && (rec.Name != ".."))
 			 {
 			   if (rec.Attr & faDirectory)
-				 {
-				   DeleteAllFromDir(destin + "\\" + rec.Name);
-				 }
+				 DeleteAllFromDir(destin + "\\" + rec.Name);
 			   else
-				 {
-				   DeleteFile(destin + "\\" + rec.Name);
-				 }
+				 DeleteFile(destin + "\\" + rec.Name);
 			 }
 		 }
 	}
@@ -1190,9 +1183,7 @@ void DeleteAllFromDir(String destin)
 	  while (FindNext(rec) == 0)
 		 {
 		   if ((rec.Name != ".") && (rec.Name != ".."))
-			 {
-			   RemoveDir(destin + "\\" + rec.Name);
-			 }
+			 RemoveDir(destin + "\\" + rec.Name);
 		 }
 	}
 
@@ -1258,13 +1249,16 @@ void StrToList(TStringList *list, String text, String delim)
 		   if ((str != NULL) || (str != ""))
 		     list->Add(str);
 		 }
+
 //если разделитель не встречается, занесем оставшийся текст в list
 	   if (text.Pos(delim) == 0)
-		 if (text != "")
-		   {
-			 if ((text != "\n") && (text != "\r\n"))
-			   list->Add(text);
-	  		}
+		 {
+		   if (text != "")
+			 {
+			   if ((text != "\n") && (text != "\r\n"))
+				 list->Add(text);
+			 }
+		 }
 	 }
   catch (Exception &e)
 	 {
@@ -1663,7 +1657,6 @@ int ReadParameter(String conf_file, String param_name, void *target, TranslateTy
 				}
         }
 	}
-
 }
 //---------------------------------------------------------------------------
 
@@ -1721,9 +1714,7 @@ FILEINFO GetFileInfo(String path)
   int pos;
 
   while (file.Pos("\\") != 0)
-    {
-      pos = file.Pos("\\");
-    };
+	pos = file.Pos("\\");
 
 //обрезаем строку по последний знак "\"
   file = file.Delete(1, pos + 1);
@@ -1766,7 +1757,6 @@ TDateTime GetFileDateTime(String file)
 					   st.wMilliseconds);
 
 	   CloseHandle(hFile);
-
 	 }
   catch (Exception &e)
 	 {
@@ -2030,9 +2020,7 @@ bool IsCorrect (int val, String type, int criteria1, int criteria2)
 
 //---------------------------------------------------------------------------
 
-String ParseString(const String &main_str,
-						String target_str,
-						const String insert_str)
+String ParseString(const String &main_str, String target_str, const String insert_str)
 {
   String result = main_str;
   int pos = 0, count = 0;
@@ -2059,9 +2047,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
   GetWindowThreadProcessId(hwnd, &dwPID);
 
   if (dwPID == (DWORD)lParam)
-	{
-	  HWND_LST->push_back(hwnd);
-	}
+	HWND_LST->push_back(hwnd);
 
   return TRUE;
 }
@@ -2138,9 +2124,7 @@ DWORD GetProcessByExeName(const wchar_t *name)
   HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
 
   if (hProcessSnap == INVALID_HANDLE_VALUE)
-	{
-	  return 0;
-	}
+	return 0;
 
   if (Process32First(hProcessSnap, &pe32))
 	{
@@ -2536,7 +2520,7 @@ HANDLE SpawnAndRedirect(LPCTSTR commandLine, HANDLE *hStdOutputReadPipe, LPCTSTR
 }
 //---------------------------------------------------------------------------
 
-String GetConsoleInfo(LPCTSTR commandLine)
+String GetRawConsoleInfo(LPCTSTR commandLine)
 {
   HANDLE hOutput, hProcess;
   String res;
@@ -2565,11 +2549,32 @@ String GetConsoleInfo(LPCTSTR commandLine)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetConsoleInfo(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetRawConsoleInfo(): " + e.ToString());
 	 }
 
   CloseHandle(hOutput);
   CloseHandle(hProcess);
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+String GetConsoleInfo(const String &cmd)
+{
+  String res;
+
+  try
+	 {
+	   res = GetRawConsoleInfo(cmd.c_str());
+	   res = ParseString(res, "\n\r", "\r");
+	   res = ParseString(res, "\r\r", "\r");
+	   res = ParseString(res, "\n\n", "\n");
+	   res = ParseString(res, "\r\n", "");
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetConsoleInfo(): " + e.ToString());
+	 }
 
   return res;
 }
