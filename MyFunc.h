@@ -156,9 +156,9 @@ int SendToHost(const wchar_t *host, int port, const String &data);
   String LoadTextFile(String filepath);
 
 //читает из потока строку, начиная с позиции pos
-  String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size);
+  String ReadStringFromBinaryStream(TStream *stream, int pos);
 //читает из потока строку из текущей позиции
-  String ReadStringFromBinaryStream(TStream *stream, int read_size);
+  String ReadStringFromBinaryStream(TStream *stream);
 
   void WriteStringIntoBinaryStream(TStream *stream, String str);
 

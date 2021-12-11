@@ -427,21 +427,13 @@ String LoadTextFile(String filepath)
 }
 //---------------------------------------------------------------------------
 
-String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size)
+String ReadStringFromBinaryStream(TStream *stream)
 {
   String res;
 
   try
 	 {
-	   std::unique_ptr<wchar_t[]> str(new wchar_t[read_size + 1]);
-	   //auto str = std::make_unique<wchar_t[]>(read_size + 1);
-
-	   if (pos >= 0)
-		 stream->Position = pos;
-
-	   stream->Position += stream->Read(&str, wcslen(str.get()) * sizeof(wchar_t));
-
-	   res = str.get();
+	   res = ReadStringFromBinaryStream(stream, -1);
 	 }
   catch (Exception &e)
 	 {
@@ -454,13 +446,32 @@ String ReadStringFromBinaryStream(TStream *stream, int pos, int read_size)
 }
 //---------------------------------------------------------------------------
 
-String ReadStringFromBinaryStream(TStream *stream, int read_size)
+String ReadStringFromBinaryStream(TStream *stream, int pos)
 {
   String res;
 
   try
 	 {
-	   res = ReadStringFromBinaryStream(stream, -1, read_size);
+	   if (pos >= 0)
+		 stream->Position = pos;
+
+	   int len = 0;
+	   wchar_t smb;
+
+	   stream->Position += stream->Read(&len, sizeof(int));
+
+	   std::unique_ptr<wchar_t[]> str(new wchar_t[len]);
+	   //auto str = std::make_unique<wchar_t[]>(read_size + 1);
+
+	   for (int i = 0; i < len; i++)
+		  {
+			stream->Position += stream->Read(&smb, sizeof(wchar_t));
+			str[i] = smb;
+		  }
+
+	   str[len] = '\0';
+
+	   res = str.get();
 	 }
   catch (Exception &e)
 	 {
