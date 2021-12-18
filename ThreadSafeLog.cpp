@@ -1,3 +1,20 @@
+/*!
+Copyright 2019-2021 Maxim Noltmeer (m.noltmeer@gmail.com)
+
+This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 //---------------------------------------------------------------------------
 
 #pragma hdrstop
@@ -6,19 +23,18 @@
 #include "ThreadSafeLog.h"
 //---------------------------------------------------------------------------
 
+TThreadSafeLog::TThreadSafeLog()
+{
+  FList.reset(new TStringList());
+  FLock.reset(new TCriticalSection());
+}
+//---------------------------------------------------------------------------
+
 void TThreadSafeLog::Add(const String &rec)
 {
   try
 	 {
-	   String msg = "[" +
-					DateToStr(Date()) +
-					" " +
-					TimeToStr(Time()) +
-					"]" +
-					" : " +
-					rec;
-
-	   FList->Add(msg);
+	   Add(rec, UseTimeStamp);
 	 }
   catch (Exception &e)
 	 {
@@ -27,11 +43,11 @@ void TThreadSafeLog::Add(const String &rec)
 }
 //---------------------------------------------------------------------------
 
-void TThreadSafeLog::Add(const String &rec, bool no_timestamp)
+void TThreadSafeLog::Add(const String &rec, bool timestamp)
 {
   try
 	 {
-	   if (no_timestamp)
+	   if (!timestamp)
 		 FList->Add(rec);
 	   else
 		 {
@@ -110,7 +126,8 @@ void TThreadSafeLog::Remove(int ind)
   try
 	 {
 	   try
-		  {FList->Delete(ind);
+		  {
+		    FList->Delete(ind);
 		  }
 	   catch (Exception &e)
 		  {
