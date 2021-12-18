@@ -2033,16 +2033,26 @@ bool IsCorrect (int val, String type, int criteria1, int criteria2)
 
 String ParseString(const String &main_str, String target_str, const String insert_str)
 {
-  String result = main_str;
-  int pos = 0, count = 0;
+  String result = "";
 
-  while (result.Pos(target_str) != 0)
-    {
-	  pos = result.Pos(target_str);
-      count = target_str.Length();
-	  result = result.Delete(pos, count);
-	  result = result.Insert(insert_str, pos);
-	}
+  try
+	 {
+	   result = main_str;
+	   int pos = 0, count = 0;
+
+	   while (result.Pos(target_str) != 0)
+		 {
+		   pos = result.Pos(target_str);
+		   count = target_str.Length();
+		   result = result.Delete(pos, count);
+		   result = result.Insert(insert_str, pos);
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "ParseString: " + e.Message;
+	   throw e;
+	 }
 
   return result;
 }
