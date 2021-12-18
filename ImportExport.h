@@ -21,29 +21,29 @@ This program is free software: you can redistribute it and/or modify
 #define ImportExportH
 
 #include <System.Classes.hpp>
+#include <memory>
 #include <vector>
 
 //---------------------------------------------------------------------------
 class TStructuredData
 {
   private:
-	std::vector<String> FFields;
+	std::unique_ptr<TStringList> FFields;
 
 	String FGetVal(int ind);
 	void FSetVal(int ind, const String &val);
 
-	inline int FCount(){return FFields.size();}
+	inline int FCount(){return FFields->Count;}
 
   public:
-	TStructuredData(){};
-	TStructuredData(int col_cnt){FFields.reserve(col_cnt);}
-	inline virtual ~TStructuredData(){Clear();}
+	TStructuredData();
+	TStructuredData(const String &data_string, const String &delim);
+	inline virtual ~TStructuredData(){};
 
-	inline void Clear(){FFields.clear();}
+	void ImportData(const String &data_string, const String &delim);
+	String ExportData(const String &delim);
 
-	void ImportData(String data_string, String delim);
-
-	__property int Count = {read = FCount};
+	__property int FieldCount = {read = FCount};
 	__property String Fields[int ind] = {read = FGetVal, write = FSetVal};
 };
 
@@ -52,8 +52,11 @@ class TDataHolder
   private:
 	std::vector<TStructuredData*> FRecords;
 
-	String FGetVal(int col, int row);
-	void FSetVal(int col, int row, const String &val);
+	String FGetCell(int row, int col);
+	void FSetCell(int row, int col, const String &val);
+
+	TStructuredData *FGetRow(int ind);
+	void FSetRow(int ind, TStructuredData *row);
 
 	inline int FCount(){return FRecords.size();}
 
@@ -61,12 +64,18 @@ class TDataHolder
 	TDataHolder(){};
 	inline virtual ~TDataHolder(){Clear();}
 
-	inline void Clear(){for (int i = 0; i < RecordCount; i++){delete FRecords[i]; FRecords.clear();}}
+	void Clear();
+
+	void Import(const String &file, const String &delim);
+	void Export(const String &file, const String &delim);
 
 	__property int RecordCount = {read = FCount};
-	__property String Cells[int col][int row] = {read = FGetVal, write = FSetVal};
+	__property TStructuredData *Rows[int ind] = {read = FGetRow, write = FSetRow};
+	__property String Cells[int row][int col] = {read = FGetCell, write = FSetCell};
 };
 
 
 String ParseString(const String &main_str, String target_str, const String insert_str);
+void StrToList(TStringList *list, String text, String delim);
+String ListToStr(TStringList *list, String delim);
 #endif
