@@ -164,7 +164,7 @@ String TStructuredData::ExportData(const String &delim)
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
-String TDataHolder::FGetCell(int row, int col)
+String TDataHolder::FGetCell(int col, int row)
 {
   String res;
 
@@ -186,7 +186,7 @@ String TDataHolder::FGetCell(int row, int col)
 }
 //---------------------------------------------------------------------------
 
-void TDataHolder::FSetCell(int row, int col, const String &val)
+void TDataHolder::FSetCell(int col, int row, const String &val)
 {
   try
 	 {

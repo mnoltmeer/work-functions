@@ -52,8 +52,8 @@ class TDataHolder
   private:
 	std::vector<TStructuredData*> FRecords;
 
-	String FGetCell(int row, int col);
-	void FSetCell(int row, int col, const String &val);
+	String FGetCell(int col, int row);
+	void FSetCell(int col, int row, const String &val);
 
 	TStructuredData *FGetRow(int ind);
 	void FSetRow(int ind, TStructuredData *row);
@@ -71,7 +71,7 @@ class TDataHolder
 
 	__property int RecordCount = {read = FCount};
 	__property TStructuredData *Rows[int ind] = {read = FGetRow, write = FSetRow};
-	__property String Cells[int row][int col] = {read = FGetCell, write = FSetCell};
+	__property String Cells[int col][int row] = {read = FGetCell, write = FSetCell};
 };
 
 
