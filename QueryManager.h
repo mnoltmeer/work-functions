@@ -22,6 +22,7 @@ This program is free software: you can redistribute it and/or modify
 
 #include <FireDAC.Comp.Client.hpp>
 #include <Xml.XMLDoc.hpp>
+#include <Xml.XMLIntf.hpp>
 #include <Xml.omnixmldom.hpp>
 #include <vector>
 #include <memory>
@@ -38,15 +39,17 @@ class TManagedQuery
   private:
 	std::unique_ptr<TFDTransaction> FTrans;
 	std::unique_ptr<TFDQuery> FQuery;
+	TFDConnection *FConn;
 	String FText;
 	String FID;
+	int FRecCount;
 	std::vector<TextMark> FProcMarks;
 	std::vector<TextMark> FStrMarks;
 
+	bool FGetEof(){return FQuery->Eof;}
 	TFDQuery *FGetQuery(){return FQuery.get();}
-	TFDParam *FGetParam(const String &name);
-	TField *FGetField(const String &name);
-	int FGetRecCount(){return FQuery->RecordCount;}
+	TFDParam *FGetParam(String name);
+	TField *FGetField(String name);
 
     String ParsingProcedures(String query_text);
 	String InsertProcedureText(String text);
@@ -58,14 +61,23 @@ class TManagedQuery
 	TManagedQuery(const String &id, TFDConnection *conn);
 	inline virtual ~TManagedQuery(){};
 
-	bool Execute();
+	void Init(); //initiates work, parses query for string constants and procedure bodies
+				 //use it before Execute()
+	bool Execute(); //executes query and sets to RecordCount value
+					//of TFDQuery::RecordCount or TFDQuery::RowsAffected
+	void Close(); //closes TFDQuery
+
+	inline void First(){FQuery->First();}
+	inline void Last(){FQuery->Last();}
+	inline void Next(){FQuery->Next();}
 
 	__property TFDQuery *DataSet = {read = FGetQuery};
 	__property String ID = {read = FID, write = FID};
 	__property String Text = {read = FText, write = FText};
-	__property TFDParam *Params[const String &name] = {read = FGetParam};
-	__property TField *Fields[const String &name] = {read = FGetField};
-	__property int RecordCount = {read = FGetRecCount};
+	__property TFDParam *Params[String name] = {read = FGetParam};
+	__property TField *Fields[String name] = {read = FGetField};
+	__property int RecordCount = {read = FRecCount};
+	__property bool Eof = {read = FGetEof};
 };
 
 class TQueryManager
@@ -77,8 +89,8 @@ class TQueryManager
 	TManagedQuery *FGetItem(int ind);
 	void FSetItem(int ind, TManagedQuery *val);
 
-	TManagedQuery *FGetItemID(const String &id);
-	void FSetItemID(const String &id, TManagedQuery *val);
+	TManagedQuery *FGetItemID(String id);
+	void FSetItemID(String id, TManagedQuery *val);
 
 	inline int FCount(){return FQueries.size();}
 
@@ -99,11 +111,11 @@ class TQueryManager
 	void LoadFromFile(const String &xml);
 
 	bool ImportFromStream(TStringStream *ms);
-    TStringStream *ExportToStream();
+	TStringStream *ExportToStream();
 
 	__property int Count = {read = FCount};
 	__property TManagedQuery *Items[int ind] = {read = FGetItem, write = FSetItem};
-	__property TManagedQuery *ItemsByID[const String &id] = {read = FGetItemID, write = FSetItemID};
+	__property TManagedQuery *ItemsByID[String id] = {read = FGetItemID, write = FSetItemID};
 };
 //---------------------------------------------------------------------------
 

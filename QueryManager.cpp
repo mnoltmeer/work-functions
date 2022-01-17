@@ -26,12 +26,13 @@ This program is free software: you can redistribute it and/or modify
 TManagedQuery::TManagedQuery(const String &id, TFDConnection *conn)
 {
   FID = id;
-  FTrans.reset(CreateNewTransactionObj(conn));
-  FQuery.reset(CreateNewQueryObj(FTrans.get(), conn));
+  FConn = conn;
+  FTrans.reset(CreateNewTransactionObj(FConn));
+  FQuery.reset(CreateNewQueryObj(FTrans.get(), FConn));
 }
 //---------------------------------------------------------------------------
 
-TFDParam *TManagedQuery::FGetParam(const String &name)
+TFDParam *TManagedQuery::FGetParam(String name)
 {
   TFDParam *res;
 
@@ -50,7 +51,7 @@ TFDParam *TManagedQuery::FGetParam(const String &name)
 }
 //---------------------------------------------------------------------------
 
-TField *TManagedQuery::FGetField(const String &name)
+TField *TManagedQuery::FGetField(String name)
 {
   TField *res;
 
@@ -75,23 +76,23 @@ bool TManagedQuery::Execute()
 
   try
 	 {
-	   FProcMarks.clear();
-	   Text = PrepareStringParams(Text);
-	   Text = ParsingStrings(Text);
-	   Text = ParsingProcedures(Text);
+	   if (!FConn->Connected)
+		 throw Exception("No connection");
 
 	   FTrans->StartTransaction();
-
-	   FQuery->SQL->Add(Text);
 	   FQuery->Prepare();
 
 	   if (Text.Trim().SubString(1, 6).UpperCase() == "SELECT")
 		 {
 		   FQuery->Open();
 		   FQuery->FetchAll();
+		   FRecCount = FQuery->RecordCount;
 		 }
 	   else
-		 FQuery->ExecSQL();
+		 {
+		   FQuery->ExecSQL();
+		   FRecCount = FQuery->RowsAffected;
+		 }
 
 	   FTrans->Commit();
 	 }
@@ -104,6 +105,43 @@ bool TManagedQuery::Execute()
 	 }
 
   return res;
+}
+//---------------------------------------------------------------------------
+
+void TManagedQuery::Init()
+{
+  try
+	 {
+	   FStrMarks.clear();
+	   FProcMarks.clear();
+
+	   String text = Text;
+
+       FQuery->SQL->Clear();
+	   text = PrepareStringParams(text);
+	   text = ParsingStrings(text);
+	   text = ParsingProcedures(text);
+	   FQuery->SQL->Add(text);
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "TManagedQuery::Init: " + e.Message;
+	   throw e;
+	 }
+}
+//---------------------------------------------------------------------------
+
+void TManagedQuery::Close()
+{
+  try
+	 {
+	   FQuery->Close();
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "TManagedQuery::Close: " + e.Message;
+	   throw e;
+	 }
 }
 //---------------------------------------------------------------------------
 
@@ -298,7 +336,7 @@ void TQueryManager::FSetItem(int ind, TManagedQuery *val)
 }
 //---------------------------------------------------------------------------
 
-TManagedQuery *TQueryManager::FGetItemID(const String &id)
+TManagedQuery *TQueryManager::FGetItemID(String id)
 {
   try
 	 {
@@ -316,7 +354,7 @@ TManagedQuery *TQueryManager::FGetItemID(const String &id)
 }
 //---------------------------------------------------------------------------
 
-void TQueryManager::FSetItemID(const String &id, TManagedQuery *val)
+void TQueryManager::FSetItemID(String id, TManagedQuery *val)
 {
   try
 	 {
@@ -447,7 +485,7 @@ void TQueryManager::LoadFromFile(const String &xml)
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TActSet::Import:: " + e.Message;
+	   e.Message = "TQueryManager::LoadFromFile:: " + e.Message;
 	   throw e;
 	 }
 }
@@ -456,13 +494,13 @@ void TQueryManager::LoadFromFile(const String &xml)
 bool TQueryManager::ImportFromStream(TStringStream *ms)
 {
   bool res = false;
-  std::unique_ptr<TXMLDocument> ixml(new TXMLDocument(NULL));
 
   try
 	 {
+	   _di_IXMLDocument ixml = NewXMLDocument();
+
 	   ms->Position = 0;
 
-	   ixml->DOMVendor = GetDOMVendor(sOmniXmlVendor);
 	   ixml->Active = true;
 	   ixml->Encoding = "UTF-8";
 	   ixml->Options = ixml->Options << doNodeAutoIndent;
@@ -492,7 +530,6 @@ bool TQueryManager::ImportFromStream(TStringStream *ms)
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TActSet::ImportFormStream:: " + e.Message;
 	   throw e;
 	 }
 
@@ -540,7 +577,7 @@ TStringStream *TQueryManager::ExportToStream()
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TActSet::Export:: " + e.Message;
+	   e.Message = "TQueryManager::SaveToFile:: " + e.Message;
 	   throw e;
 	 }
 
