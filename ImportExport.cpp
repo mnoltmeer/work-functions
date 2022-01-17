@@ -216,7 +216,7 @@ TStructuredData *TDataHolder::FGetRow(int ind)
 	 }
   catch (Exception &e)
 	 {
-	   res = nullptr;
+	   res = NULL;
 	   e.Message = "TDataHolder::Rows: " + e.Message;
 	   throw e;
 	 }
@@ -250,14 +250,64 @@ void TDataHolder::FSetRow(int ind, TStructuredData *row)
 void TDataHolder::Clear()
 {
   for (int i = 0; i < RecordCount; i++)
+	 delete FRecords[i];
+
+  FRecords.clear();
+}
+//---------------------------------------------------------------------------
+
+TStructuredData *TDataHolder::Add()
+{
+  TStructuredData *res;
+
+  try
 	 {
-	   delete FRecords[i];
-	   FRecords.clear();
+	   res = new TStructuredData();
+	   FRecords.push_back(res);
+	 }
+  catch (Exception &e)
+	 {
+	   res = NULL;
+	   e.Message = "TDataHolder::Add: " + e.Message;
+	   throw e;
+	 }
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+TStructuredData *TDataHolder::Add(const String &data_string, const String &delim)
+{
+  TStructuredData *res = Add();
+
+  if (res)
+    res->ImportData(data_string, delim);
+
+  return res;
+}
+//---------------------------------------------------------------------------
+
+void TDataHolder::Remove(int ind)
+{
+  try
+	 {
+	   if ((ind < 0) || (ind >= RecordCount))
+		 throw Exception("Out of range");
+	   else
+		 {
+		   delete FRecords[ind];
+		   FRecords.erase(FRecords.begin() + ind);
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "TDataHolder::Remove: " + e.Message;
+	   throw e;
 	 }
 }
 //---------------------------------------------------------------------------
 
-void TDataHolder::Import(const String &file, const String &delim)
+void TDataHolder::ImportCSV(const String &file, const String &delim)
 {
   try
 	 {
@@ -272,13 +322,13 @@ void TDataHolder::Import(const String &file, const String &delim)
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TDataHolder::Import: " + e.Message;
+	   e.Message = "TDataHolder::ImportCSV: " + e.Message;
 	   throw e;
 	 }
 }
 //---------------------------------------------------------------------------
 
-void TDataHolder::Export(const String &file, const String &delim)
+void TDataHolder::ExportCSV(const String &file, const String &delim)
 {
   try
 	 {
@@ -287,11 +337,113 @@ void TDataHolder::Export(const String &file, const String &delim)
 	   for (int  i = 0; i < RecordCount; i++)
 		  lst->Add(FRecords[i]->ExportData(delim));
 
+       if (FileExists(file))
+         DeleteFile(file);
+
 	   lst->SaveToFile(file, TEncoding::UTF8);
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TDataHolder::Import: " + e.Message;
+	   e.Message = "TDataHolder::ExportCSV: " + e.Message;
+	   throw e;
+	 }
+}
+//---------------------------------------------------------------------------
+
+void TDataHolder::ImportXLS(const String &file,  int last_row, int last_col, bool used_thread)
+{
+  try
+	 {
+	   Clear();
+
+       Variant VarApp, VarBooks, VarBook, VarSheets,
+			   VarSheet, VarCells, VarCell;
+
+	   if (used_thread)
+		 CoInitialize(NULL);
+
+	   VarApp = CreateOleObject("Excel.Application");
+
+	   VarBooks = VarApp.OlePropertyGet("Workbooks");
+	   VarBooks.OleFunction("Open", WideString(file));
+	   VarBook = VarBooks.OlePropertyGet("Item", 1);
+	   VarSheets = VarBook.OlePropertyGet("Worksheets");
+	   VarSheet = VarSheets.OlePropertyGet("Item", 1);
+
+	   VarSheet.OlePropertyGet("Cells", 1, 1).OleProcedure("Activate");
+
+	   for (int  i = 1; i <= last_row; i++)
+		  {
+			TStructuredData *row = Add();
+
+			if (row)
+			  {
+				for (int j = 1; j <= last_col; j++)
+				   {
+					 VarCell = VarSheet.OlePropertyGet("Cells").OlePropertyGet("Item", i, j);
+					 row->Add(VarCell.OlePropertyGet("Value"));
+				   }
+			  }
+		  }
+
+	   VarApp.OlePropertySet("DisplayAlerts", false);
+	   VarApp.OleProcedure("Quit");
+
+	   if (used_thread)
+		 CoUninitialize();
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "TDataHolder::ImportXLS: " + e.Message;
+	   throw e;
+	 }
+}
+//---------------------------------------------------------------------------
+
+void TDataHolder::ExportXLS(const String &file, bool used_thread)
+{
+  try
+	 {
+	   Variant VarApp, VarBooks, VarBook, VarSheets,
+			   VarSheet, VarCells, VarCell;
+
+	   if (FileExists(file))
+         DeleteFile(file);
+
+	   if (used_thread)
+		 CoInitialize(NULL);
+
+	   VarApp = CreateOleObject("Excel.Application");
+
+	   VarBooks = VarApp.OlePropertyGet("Workbooks");
+	   VarApp.OlePropertySet("SheetsInNewWorkbook", 1);  //кількість листів у книзі
+	   VarBooks.OleProcedure("Add");
+
+	   VarBook = VarBooks.OlePropertyGet("Item", 1);
+	   VarSheets = VarBook.OlePropertyGet("Worksheets");
+	   VarSheet = VarSheets.OlePropertyGet("Item", 1);
+	   VarSheet.OlePropertySet("Name", WideString("Дані"));
+
+	   for (int  i = 0; i < RecordCount; i++)
+		  {
+			for (int j = 0; j < FRecords[i]->FieldCount; j++)
+			   {
+				 VarCell = VarSheet.OlePropertyGet("Cells").OlePropertyGet("Item", i + 1, j + 1);
+				 VarCell.OlePropertySet("NumberFormat", WideString("@"));
+				 VarCell.OlePropertySet("Value", WideString(Cells[j][i]));
+			   }
+		  }
+
+	   VarApp.OlePropertySet("DisplayAlerts", false);
+	   VarBook.OleProcedure("SaveAs", WideString(file));
+	   VarApp.OleProcedure("Quit");
+
+	   if (used_thread)
+		 CoUninitialize();
+	 }
+  catch (Exception &e)
+	 {
+	   e.Message = "TDataHolder::ExportXLS: " + e.Message;
 	   throw e;
 	 }
 }

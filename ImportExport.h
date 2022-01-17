@@ -21,8 +21,12 @@ This program is free software: you can redistribute it and/or modify
 #define ImportExportH
 
 #include <System.Classes.hpp>
+#include <ComObj.hpp>
 #include <memory>
 #include <vector>
+
+#define USE_THREAD true
+#define NO_USE_THREAD false
 
 //---------------------------------------------------------------------------
 class TStructuredData
@@ -42,6 +46,8 @@ class TStructuredData
 
 	void ImportData(const String &data_string, const String &delim);
 	String ExportData(const String &delim);
+	inline void Add(const String &data){FFields->Add(data);}
+	inline void Remove(int ind){FFields->Delete(ind);}
 
 	__property int FieldCount = {read = FCount};
 	__property String Fields[int ind] = {read = FGetVal, write = FSetVal};
@@ -66,8 +72,14 @@ class TDataHolder
 
 	void Clear();
 
-	void Import(const String &file, const String &delim);
-	void Export(const String &file, const String &delim);
+	void ImportCSV(const String &file, const String &delim);
+	void ExportCSV(const String &file, const String &delim);
+	void ImportXLS(const String &file, int last_row, int last_col, bool used_thread);
+	void ExportXLS(const String &file, bool used_thread);
+
+	TStructuredData *Add();
+	TStructuredData *Add(const String &data_string, const String &delim);
+	void Remove(int ind);
 
 	__property int RecordCount = {read = FCount};
 	__property TStructuredData *Rows[int ind] = {read = FGetRow, write = FSetRow};
