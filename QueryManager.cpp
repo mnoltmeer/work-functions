@@ -80,7 +80,7 @@ bool TManagedQuery::Execute()
 		 throw Exception("No connection");
 
 	   FTrans->StartTransaction();
-	   FQuery->Prepare();
+       FQuery->Prepare();
 
 	   if (Text.Trim().SubString(1, 6).UpperCase() == "SELECT")
 		 {
@@ -112,16 +112,22 @@ void TManagedQuery::Init()
 {
   try
 	 {
+	   FRecCount = -1;
 	   FStrMarks.clear();
 	   FProcMarks.clear();
 
 	   String text = Text;
 
-       FQuery->SQL->Clear();
-	   text = PrepareStringParams(text);
+	   FQuery->SQL->Clear();
+	   FQuery->Params->Clear();
+
 	   text = ParsingStrings(text);
 	   text = ParsingProcedures(text);
-	   FQuery->SQL->Add(text);
+
+	   if (text.Pos("#"))
+		 text = InsertProcedureText(text);
+
+	   text = PrepareStringParams(text);
 	 }
   catch (Exception &e)
 	 {
@@ -271,15 +277,20 @@ String TManagedQuery::PrepareStringParams(String text)
 {
   try
 	 {
-	   FQuery->Params->Clear();
-
 	   for (int i = 0; i < FStrMarks.size(); i++)
 		  {
 			String name = FStrMarks[i].Mark;
 			name.Delete(1, 2);
-			FQuery->Params->CreateParam(ftString, name, ptInput);
-			FQuery->ParamByName(name)->AsAnsiString = FStrMarks[i].Text;
-	   		text = ParseString(text, FStrMarks[i].Mark, ":" + name);
+			text = ParseString(text, FStrMarks[i].Mark, ":" + name);
+		  }
+
+       FQuery->SQL->Add(text);
+
+       for (int i = 0; i < FStrMarks.size(); i++)
+		  {
+			String name = FStrMarks[i].Mark;
+			name.Delete(1, 2);
+			Params[name]->AsString = FStrMarks[i].Text;
 		  }
 	 }
   catch (Exception &e)
