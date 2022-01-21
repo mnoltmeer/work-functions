@@ -43,25 +43,17 @@ class TManagedQuery
 	String FText;
 	String FID;
 	int FRecCount;
-	std::vector<TextMark> FProcMarks;
-	std::vector<TextMark> FStrMarks;
 
 	bool FGetEof(){return FQuery->Eof;}
 	TFDQuery *FGetQuery(){return FQuery.get();}
 	TFDParam *FGetParam(String name);
 	TField *FGetField(String name);
 
-    String ParsingProcedures(String query_text);
-	String InsertProcedureText(String text);
-	String ParsingStrings(String query_text);
-	String ReparseStringsInProcedure(String procedure_text);
-    String PrepareStringParams(String text);
-
   public:
 	TManagedQuery(const String &id, TFDConnection *conn);
 	inline virtual ~TManagedQuery(){};
 
-	void Init(); //initiates work, parses query for string constants and procedure bodies
+	void Init(); //initiates work, cleares parameters and query text
 				 //use it before Execute()
 	bool Execute(); //executes query and sets to RecordCount value
 					//of TFDQuery::RecordCount or TFDQuery::RowsAffected
@@ -121,5 +113,4 @@ class TQueryManager
 
 TFDTransaction *CreateNewTransactionObj(TFDConnection *conn);
 TFDQuery *CreateNewQueryObj(TFDTransaction *t, TFDConnection *conn);
-String ParseString(const String &main_str, String target_str, const String insert_str);
 #endif
