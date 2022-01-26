@@ -112,10 +112,9 @@ void TManagedQuery::Init()
 {
   try
 	 {
-	   FRecCount = -1;
+       FRecCount = -1;
 	   FQuery->SQL->Clear();
 	   FQuery->Params->Clear();
-	   FQuery->SQL->Add(Text);
 	 }
   catch (Exception &e)
 	 {

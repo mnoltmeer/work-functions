@@ -40,18 +40,21 @@ class TManagedQuery
 	std::unique_ptr<TFDTransaction> FTrans;
 	std::unique_ptr<TFDQuery> FQuery;
 	TFDConnection *FConn;
-	String FText;
 	String FID;
 	int FRecCount;
 
 	bool FGetEof(){return FQuery->Eof;}
 	TFDQuery *FGetQuery(){return FQuery.get();}
+
 	TFDParam *FGetParam(String name);
 	TField *FGetField(String name);
 
+	String FGetText(){return FQuery->SQL->Text;}
+	void FSetText(String val){FQuery->SQL->Add(val);}
+
   public:
 	TManagedQuery(const String &id, TFDConnection *conn);
-	inline virtual ~TManagedQuery(){};
+	inline virtual ~TManagedQuery(){if (FQuery) {Close();}}
 
 	void Init(); //initiates work, cleares parameters and query text
 				 //use it before Execute()
@@ -65,7 +68,7 @@ class TManagedQuery
 
 	__property TFDQuery *DataSet = {read = FGetQuery};
 	__property String ID = {read = FID, write = FID};
-	__property String Text = {read = FText, write = FText};
+	__property String Text = {read = FGetText, write = FSetText};
 	__property TFDParam *Params[String name] = {read = FGetParam};
 	__property TField *Fields[String name] = {read = FGetField};
 	__property int RecordCount = {read = FRecCount};
