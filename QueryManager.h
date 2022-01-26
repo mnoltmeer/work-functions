@@ -50,14 +50,12 @@ class TManagedQuery
 	TField *FGetField(String name);
 
 	String FGetText(){return FQuery->SQL->Text;}
-	void FSetText(String val){FQuery->SQL->Add(val);}
+	void FSetText(String val){FQuery->SQL->Clear(); FQuery->SQL->Add(val);}
 
   public:
 	TManagedQuery(const String &id, TFDConnection *conn);
 	inline virtual ~TManagedQuery(){if (FQuery) {Close();}}
 
-	void Init(); //initiates work, cleares parameters and query text
-				 //use it before Execute()
 	bool Execute(); //executes query and sets to RecordCount value
 					//of TFDQuery::RecordCount or TFDQuery::RowsAffected
 	void Close(); //closes TFDQuery

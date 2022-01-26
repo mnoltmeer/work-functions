@@ -43,7 +43,7 @@ TFDParam *TManagedQuery::FGetParam(String name)
   catch (Exception &e)
 	 {
 	   res = NULL;
-	   e.Message = "TManagedQuery::Params: " + e.Message;
+	   e.Message = "[" + name + "]::Params: " + e.Message;
 	   throw e;
 	 }
 
@@ -62,7 +62,7 @@ TField *TManagedQuery::FGetField(String name)
   catch (Exception &e)
 	 {
 	   res = NULL;
-	   e.Message = "TManagedQuery::Fields: " + e.Message;
+	   e.Message = "[" + name + "]::Fields: " + e.Message;
 	   throw e;
 	 }
 
@@ -79,6 +79,7 @@ bool TManagedQuery::Execute()
 	   if (!FConn->Connected)
 		 throw Exception("No connection");
 
+       FRecCount = -1;
 	   FTrans->StartTransaction();
        FQuery->Prepare();
 
@@ -100,27 +101,11 @@ bool TManagedQuery::Execute()
 	 {
 	   FTrans->Rollback();
 	   res = false;
-	   e.Message = "TManagedQuery::Execute: " + e.Message;
+	   e.Message = "[" + FID + "]::Execute: " + e.Message;
 	   throw e;
 	 }
 
   return res;
-}
-//---------------------------------------------------------------------------
-
-void TManagedQuery::Init()
-{
-  try
-	 {
-       FRecCount = -1;
-	   FQuery->SQL->Clear();
-	   FQuery->Params->Clear();
-	 }
-  catch (Exception &e)
-	 {
-	   e.Message = "TManagedQuery::Init: " + e.Message;
-	   throw e;
-	 }
 }
 //---------------------------------------------------------------------------
 
@@ -132,7 +117,7 @@ void TManagedQuery::Close()
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TManagedQuery::Close: " + e.Message;
+	   e.Message = "[" + FID + "]::Close: " + e.Message;
 	   throw e;
 	 }
 }
