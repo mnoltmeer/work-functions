@@ -25,8 +25,8 @@ This program is free software: you can redistribute it and/or modify
 #include <memory>
 #include <vector>
 
-#define USE_THREAD true
-#define NO_USE_THREAD false
+#define IN_THREAD true
+#define NOT_IN_THREAD false
 
 //---------------------------------------------------------------------------
 class TStructuredData
@@ -76,6 +76,8 @@ class TDataHolder
 	void ExportCSV(const String &file, const String &delim);
 	void ImportXLS(const String &file, int last_row, int last_col, bool used_thread);
 	void ExportXLS(const String &file, bool used_thread);
+	inline void ImportXLS(const String &file, int last_row, int last_col){ImportXLS(file, last_row, last_col, NOT_IN_THREAD);}
+	inline void ExportXLS(const String &file){ExportXLS(file, NOT_IN_THREAD);}
 
 	TStructuredData *Add();
 	TStructuredData *Add(const String &data_string, const String &delim);
