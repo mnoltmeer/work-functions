@@ -438,7 +438,7 @@ String ReadStringFromBinaryStream(TStream *stream)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-						   "GetStringFromBinaryStream(): " + e.ToString());
+						   "ReadStringFromBinaryStream(): " + e.ToString());
 	   res = "";
 	 }
 
@@ -476,7 +476,7 @@ String ReadStringFromBinaryStream(TStream *stream, int pos)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-	   					   "GetStringFromBinaryStream(): " + e.ToString());
+						   "ReadStringFromBinaryStream(): " + e.ToString());
 	   res = "";
 	 }
 
@@ -501,7 +501,7 @@ void WriteStringIntoBinaryStream(TStream *stream, String str)
   catch (Exception &e)
 	 {
 	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir,
-						   "GetStringFromBinaryStream(): " + e.ToString());
+						   "WriteStringIntoBinaryStream(): " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
