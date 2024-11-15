@@ -336,7 +336,7 @@ if(GetAppVersion(Application->ExeName.c_str(), ApplicationVersion))
 //заносит лог события в файл
   void SaveLog(String file, String rec);
 
-//заносит лог события в файл который расположен в каталоге Документы из %USERPROFILE%
+//заносит лог события в файл который расположен в каталог %USERPROFILE%
   void SaveLogToUserFolder(const String &file, const String &subdir, const String &msg);
 
 //высчитывает контрольную сумму файла (MD5) и возвращает ее

@@ -1931,7 +1931,7 @@ void SaveLogToUserFolder(const String &file, const String &subdir, const String 
 				+ msg
 				+ "\r\n";
 
-  String path = GetEnvironmentVariable("USERPROFILE") + "\\Documents\\";
+  String path = GetEnvironmentVariable("USERPROFILE") + "\\";
 
   if (subdir != "")
 	path += subdir + "\\" + file;
