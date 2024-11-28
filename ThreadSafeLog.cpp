@@ -38,7 +38,7 @@ void TThreadSafeLog::Add(const String &rec)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "TThreadSafeLog::Add(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::Add: " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -64,7 +64,7 @@ void TThreadSafeLog::Add(const String &rec, bool timestamp)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "TThreadSafeLog::Add(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::Add: " + e.ToString());
 	 }
 }
 //---------------------------------------------------------------------------
@@ -84,8 +84,7 @@ int TThreadSafeLog::IndexOf(const String &rec)
 	   catch (Exception &e)
 		  {
 			index = -1;
-			SaveLog("exceptions.log", "TThreadSafeLog::IndexOf(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::IndexOf(): " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -109,8 +108,7 @@ String TThreadSafeLog::Get(int ind)
 	   catch (Exception &e)
 		  {
 			rec = "";
-			SaveLog("exceptions.log", "TThreadSafeLog::Get(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::Get: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -131,8 +129,7 @@ void TThreadSafeLog::Remove(int ind)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "TThreadSafeLog::Remove(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::Remove: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -151,8 +148,7 @@ void TThreadSafeLog::Clear()
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "TThreadSafeLog::Clear(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::Clear: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -171,8 +167,7 @@ void TThreadSafeLog::SaveToFile(const String &file)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "TThreadSafeLog::SaveToFile(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::SaveToFile: " + 	e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -191,8 +186,7 @@ void TThreadSafeLog::SaveToStream(TStringStream *stream)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "TThreadSafeLog::SaveToStream(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::SaveToStream: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -211,8 +205,7 @@ void TThreadSafeLog::LoadFromFile(const String &file)
 		  }
 	   catch (Exception &e)
 		  {
-			SaveLog("exceptions.log", "TThreadSafeLog::LoadFromFile(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::LoadFromFile: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
@@ -234,8 +227,7 @@ String TThreadSafeLog::GetText()
 	   catch (Exception &e)
 		  {
 			text = "";
-			SaveLog("exceptions.log", "TThreadSafeLog::LoadFromFile(): " +
-					e.ToString());
+			SaveLogToUserFolder("exceptions.log", "", "TThreadSafeLog::LoadFromFile: " + e.ToString());
 		  }
 	 }
   __finally {FLock->Leave();}
