@@ -26,7 +26,9 @@ This program is free software: you can redistribute it and/or modify
   void SaveToFile(String file, String text);
   void AddToFile(String file, String text);
 
-//заносит лог события в файл
+//записує лог події у файл
   void SaveLog(String file, String rec);
   void SaveLog(String text, TStringList *log);
+  //записує лог у файл, що розташований у каталозі %USERPROFILE%
+  void SaveLogToUserFolder(const String &file, const String &subdir, const String &msg);
 #endif

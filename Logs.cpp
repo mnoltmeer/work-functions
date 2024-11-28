@@ -23,35 +23,50 @@ This program is free software: you can redistribute it and/or modify
 #include "Logs.h"
 //---------------------------------------------------------------------------
 
-//сохраняет текст в файл
 void SaveToFile(String file, String text)
 {
-  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
+  try
+	 {
+	   std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
 
-  ms->Position = 0;
-  ms->SaveToFile(file);
+	   ms->Position = 0;
+	   ms->SaveToFile(file);
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", "", "SaveToFile: " + e.ToString());
+	 }
 }
 //---------------------------------------------------------------------------
 
 void AddToFile(String file, String text)
 {
-  if (!FileExists(file))
-	SaveToFile(file, text);
-  else
-	{
-	  std::unique_ptr<TFileStream> srv_file(new TFileStream(file, fmOpenWrite));
-	  std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
+  try
+	 {
+	   if (!FileExists(file))
+		 SaveToFile(file, text);
+	   else
+		 {
+		   std::unique_ptr<TFileStream> srv_file(new TFileStream(file, fmOpenWrite));
+		   std::unique_ptr<TStringStream> ms(new TStringStream(text, TEncoding::UTF8, true));
 
-	  ms->Position = 0;
-	  srv_file->Position = srv_file->Size;
-	  srv_file->CopyFrom(ms.get(), ms->Size);
-	}
+		   ms->Position = 0;
+		   srv_file->Position = srv_file->Size;
+		   srv_file->CopyFrom(ms.get(), ms->Size);
+		 }
+	 }
+  catch (Exception &e)
+	 {
+	   SaveLogToUserFolder("exceptions.log", "", "AddToFile: " + e.ToString());
+	 }
+
+  
 }
 //---------------------------------------------------------------------------
 
 void SaveLog(String file, String rec)
 {
-//добавим к тексту дату и время добавления
+//додамо до тексту логу дату та час
   rec = "[" +
 		DateToStr(Date()) +
 		" " +
@@ -61,7 +76,6 @@ void SaveLog(String file, String rec)
 		rec +
 		"\r\n";
 
-//сохраняем в файл
   AddToFile(file, rec);
 }
 //---------------------------------------------------------------------------
@@ -82,8 +96,30 @@ void SaveLog(String text, TStringList *log)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLog("exceptions.log", "SaveLog(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", "", "SaveLog: " + e.ToString());
 	 }
+}
+//---------------------------------------------------------------------------
+
+void SaveLogToUserFolder(const String &file, const String &subdir, const String &msg)
+{
+//додамо до тексту логу дату та час
+  String rec = "[" + DateToStr(Date())
+				+ " "
+				+ TimeToStr(Time())
+				+ "]"
+				+ " : "
+				+ msg
+				+ "\r\n";
+
+  String path = GetEnvironmentVariable("USERPROFILE") + "\\";
+
+  if (subdir != "")
+	path += subdir + "\\" + file;
+  else
+	path += file;
+
+  AddToFile(path, rec);
 }
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
