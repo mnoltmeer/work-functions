@@ -127,7 +127,7 @@ void TSpriteCollection::RemoveSprite(const String &name)
 	 }
   catch (Exception &e)
 	 {
-	   e.Message = "TSpriteCollection::RemoveState: " + e.Message;
+	   e.Message = "TSpriteCollection::RemoveSprite: " + e.Message;
 	   throw e;
 	 }
 }
@@ -137,7 +137,7 @@ void TSpriteCollection::RemoveSprite(int ind)
 {
   try
 	 {
-	   if (ind < 0)
+	   if ((ind < 0) (ind >= FItems.size()))
 		 throw Exception("List index out of bounds");
 
 	   Sprite sprite = FItems[ind];
