@@ -137,7 +137,7 @@ void TSpriteCollection::RemoveSprite(int ind)
 {
   try
 	 {
-	   if ((ind < 0) (ind >= FItems.size()))
+	   if ((ind < 0) || (ind >= FItems.size()))
 		 throw Exception("List index out of bounds");
 
 	   Sprite sprite = FItems[ind];
