@@ -37,11 +37,11 @@ TForm* TFormCollection::FGet(int id)
 }
 //---------------------------------------------------------------------------
 
-void TSpriteCollection::Delete(int ind)
+void TFormCollection::Delete(int ind)
 {
   try
 	 {
-	   if ((ind < 0) (ind >= FItems.size()))
+	   if ((ind < 0) || (ind >= FItems.size()))
 		 throw Exception("List index out of bounds");
 
 	   Form f = FItems[ind];
@@ -97,19 +97,19 @@ void TFormCollection::Clear()
 
 int TFormCollection::GenID()
 {
-  int max = -1;
+  int max = 0;
 
   try
 	 {
-	   for (int i = 0; i < items.size(); i++)
+	   for (int i = 0; i < FItems.size(); i++)
 		 {
-		   if (FItems[i]->ID > max)
-			 max = FItems[i]->ID;
+		   if (FItems[i].ID > max)
+			 max = FItems[i].ID;
 		 }
 	 }
   catch (Exception &e)
 	 {
-	   max = -2;
+	   max = -1;
        e.Message = "TFormCollection::GenID: " + e.Message;
 	   throw e;
 	 }
@@ -143,13 +143,19 @@ int TFormCollection::Add(TForm *form)
 }
 //---------------------------------------------------------------------------
 
-int TFormCollection::AddForm()
+int TFormCollection::AddNewForm(TForm *owner)
 {
-  return Add(new TForm());
+  return Add(new TForm(owner));
 }
 //---------------------------------------------------------------------------
 
-void TSpriteCollection::Remove(int id)
+int TFormCollection::AddNewForm(HWND parent_window)
+{
+  return Add(new TForm(parent_window));
+}
+//---------------------------------------------------------------------------
+
+void TFormCollection::Remove(int id)
 {
   try
 	 {

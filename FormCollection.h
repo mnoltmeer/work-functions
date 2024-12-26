@@ -22,7 +22,9 @@ This program is free software: you can redistribute it and/or modify
 //---------------------------------------------------------------------------
 
 #include <System.Classes.hpp>
-
+#include <Vcl.Controls.hpp>
+#include <Vcl.StdCtrls.hpp>
+#include <Vcl.Forms.hpp>
 
 #include <vector>
 //---------------------------------------------------------------------------
@@ -40,16 +42,17 @@ private:
 
 	TForm *FGet(int id);
 
-    void IndexOf(int id);
+    int IndexOf(int id);
     void Delete(int ind);
     void Clear();
     int GenID();
 
 public:
-	TSpriteCollection(){};
-	inline virtual ~TSpriteCollection(){Clear();}
+	TFormCollection(){};
+	inline virtual ~TFormCollection(){Clear();}
 
-    int AddForm();
+	int AddNewForm(TForm *owner);
+	int AddNewForm(HWND parent_window);
 	int Add(TForm *form);
 	void Remove(int id);
 
