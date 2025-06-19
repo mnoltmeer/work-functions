@@ -166,7 +166,7 @@ bool InSet(int *m, int m_pos, int val)
 	 }
   catch (Exception &e)
 	 {
-	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "GetAppVersion(): " + e.ToString());
+	   SaveLogToUserFolder("exceptions.log", UsedAppLogDir, "InSet(): " + e.ToString());
 	   res = false;
 	 }
 
