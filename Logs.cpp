@@ -59,8 +59,6 @@ void AddToFile(String file, String text)
 	 {
 	   SaveLogToUserFolder("exceptions.log", "", "AddToFile: " + e.ToString());
 	 }
-
-  
 }
 //---------------------------------------------------------------------------
 
